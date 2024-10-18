@@ -1,0 +1,27 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: wordpress
+  namespace: default
+spec:
+  releaseName: wordpress
+  chart:
+    spec:
+      chart: ../charts/wordpress-mysql  # Local path to the Helm chart
+  interval: 5m  # Flux syncs every 5 minutes
+  install:
+    createNamespace: true
+  values:
+    image:
+      repository: wordpress
+      tag: latest
+    wordpressUsername: admin
+    wordpressPassword: password
+    wordpressEmail: admin@example.com
+    wordpressBlogName: "My Blog"
+    mariadb:
+      enabled: true
+      db:
+        user: wordpress
+        password: wordpress-password
+        name: wordpress

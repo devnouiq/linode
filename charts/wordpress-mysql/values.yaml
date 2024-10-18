@@ -1,0 +1,19 @@
+image:
+  repository: wordpress
+  tag: latest
+
+wordpressUsername: admin
+wordpressPassword: password
+wordpressEmail: admin@example.com
+wordpressBlogName: "My Blog"
+
+mariadb:
+  enabled: true
+  db:
+    user: wordpress
+    password: wordpress-password
+    name: wordpress
+
+service:
+  type: ClusterIP
+  port: 80
