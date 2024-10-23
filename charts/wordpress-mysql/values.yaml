@@ -17,3 +17,9 @@ mariadb:
 service:
   type: ClusterIP
   port: 80
+
+mysql:
+  persistence:
+    enabled: true
+    size: 8Gi                    # Size of the PersistentVolume
+    storageClass: standard        # Specify the storage class (or leave it blank for default)

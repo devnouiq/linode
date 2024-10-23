@@ -9,5 +9,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.mysql.persistence.size }}
-  storageClassName: {{ .Values.mysql.persistence.storageClass }}
+      storage: {{ .Values.mysql.persistence.size | quote }}   # Ensures size is referenced from values.yaml
+  storageClassName: {{ .Values.mysql.persistence.storageClass | quote }}   # Ensure storage class is set correctly
