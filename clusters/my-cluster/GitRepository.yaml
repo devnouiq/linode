@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: wordpress-repo
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/devnouiq/linode
+  ref:
+    branch: main
+  # Optionally, specify the path where your charts are stored
+  ignore: "*.md"   # Skip syncing unnecessary files like markdowns

@@ -1,0 +1,26 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: wordpress
+  namespace: default
+spec:
+  releaseName: wordpress
+  chart:
+    spec:
+      chart: ./charts/wordpress-mysql   # Path relative to the GitRepository
+      sourceRef:
+        kind: GitRepository
+        name: wordpress-repo            # Name of the GitRepository resource
+        namespace: flux-system          # Namespace of the GitRepository resource
+  interval: 5m
+  install:
+    createNamespace: true
+  values:
+    wordpressUsername: admin
+    wordpressPassword: password123
+    mariadb:
+      enabled: true
+      db:
+        user: wordpress
+        password: wpsecretpassword
+        name: wordpress
