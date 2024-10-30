@@ -2,17 +2,18 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: wordpress
-  namespace: default                # Adjust the namespace as needed
+  namespace: default  # Use the namespace where you want to deploy WordPress
 spec:
-  releaseName: wordpress             # Name of the release in Helm
+  interval: 1m  # Flux will check for updates every 1 minute
+  releaseName: wordpress
   chart:
     spec:
       chart: wordpress
+      version: 15.2.24  # Adjust this to the desired version
       sourceRef:
         kind: HelmRepository
-        name: bitnami                # Assuming you use the Bitnami chart for WordPress
-      version: 15.2.24               # Specify the version of the chart
-  interval: 1m                       # Flux will check for updates every 1 minute
+        name: bitnami  # Ensure a HelmRepository resource with this name exists
+        namespace: flux-system  # Adjust if the HelmRepository is in a different namespace
   values:
     image:
       repository: wordpress
