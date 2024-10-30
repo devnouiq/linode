@@ -8,5 +8,4 @@ spec:
   url: https://github.com/devnouiq/linode
   ref:
     branch: main
-  ignore: |
-    *.md
+  ignore: "*.md"   # Skip syncing unnecessary files like markdowns
