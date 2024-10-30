@@ -8,4 +8,9 @@ spec:
   url: https://github.com/devnouiq/linode
   ref:
     branch: main
-  ignore: "*.md"   # Skip syncing unnecessary files like markdowns
+  ignore: |
+    *.md     # Ignore markdown files
+  paths:
+    - ./charts
+    - ./clusters/my-cluster
+    - ./tenant
