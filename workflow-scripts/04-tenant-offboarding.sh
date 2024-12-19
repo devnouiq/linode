@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
-manifests_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants"
+manifests_path="/mnt/vol/linode/gitops/application-plane/production/tenants"
 
 main() {
     local tenant_id="$1"
@@ -53,7 +53,7 @@ EOF
 commit_files() {
     local repository_branch="$1"
     local tenant_tier="$2"
-    cd /mnt/vol/eks-saas-gitops/ || exit 1
+    cd /mnt/vol/linode/ || exit 1
     git status
     git add .
     git commit -am "Removing tenant ${tenant_id} in tier ${tenant_tier}"

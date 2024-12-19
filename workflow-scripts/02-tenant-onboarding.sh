@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
-repo_root_path="/mnt/vol/eks-saas-gitops"
+repo_root_path="/mnt/vol/linode"
 tier_templates_path="${repo_root_path}/gitops/application-plane/production/tier-templates"
 manifests_path="${repo_root_path}/gitops/application-plane/production/tenants"
 

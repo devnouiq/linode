@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
-tier_templates_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates"
-manifests_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants"
-pooled_envs_path="/mnt/vol/eks-saas-gitops/gitops/application-plane/production/pooled-envs"
+tier_templates_path="/mnt/vol/linode/gitops/application-plane/production/tier-templates"
+manifests_path="/mnt/vol/linode/gitops/application-plane/production/tenants"
+pooled_envs_path="/mnt/vol/linode/gitops/application-plane/production/pooled-envs"
 pool_env_template_file="${tier_templates_path}/basic_env_template.yaml"
 
 main() {
@@ -90,7 +90,7 @@ EOF
 commit_files() {
     local repository_branch="$1"
     local tenant_tier="$2"
-    cd /mnt/vol/eks-saas-gitops/ || exit 1
+    cd /mnt/vol/linode/ || exit 1
     git status
     git add .
     git commit -am "Deploying to $tenant_tier tenants, version $release_version"
