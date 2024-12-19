@@ -1,17 +1,20 @@
----
 apiVersion: argoproj.io/v1alpha1
 kind: EventSource
 metadata:
-  name: linode-rbmq-onboarding
+  name: tenant-onboarding
   namespace: argo-events
 spec:
-  template:
-    serviceAccountName: argo-events-sa
-  sqs:
-    tenant-provisioning:
+  amqp:
+    rbmq:
+      url: amqp://argo_user:newpassword@rabbitmq-service.argo-events:5672/
+      exchangeName: rbmq
+      exchangeType: fanout
+      queueDeclare:
+        durable: true
+        name: onboarding_queue
+      routingKey: "onboarding-key"
       jsonBody: true
-      queue: "argoworkflows-onboarding-queue"
-      waitTimeSeconds: 20
+
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Sensor
@@ -20,11 +23,11 @@ metadata:
   namespace: argo-events
 spec:
   template:
-    serviceAccountName: argo-events-sa
+    serviceAccountName: operate-workflow-sa  # Updated service account
   dependencies:
     - name: tenant-provisioning-dep
-      eventSourceName: linode-rbmq-onboarding
-      eventName: tenant-provisioning
+      eventSourceName: tenant-onboarding
+      eventName: rbmq
   triggers:
     - template:
         name: tenant-onboarding-template
@@ -38,7 +41,7 @@ spec:
                 generateName: tenant-onboarding-
                 namespace: argo-workflows
               spec:
-                serviceAccountName: argoworkflows-sa
+                serviceAccountName: operate-workflow-sa  # Updated service account
                 entrypoint: tenant-provisioning
                 synchronization:
                   mutex:
@@ -46,19 +49,19 @@ spec:
                 arguments:
                   parameters:
                     - name: TENANT_ID
-                      value: "" # ID of your tenant, use this patter eg. tenant-xx (tenant-10, tenant-11)
+                      value: ""  # Tenant ID to be replaced by actual data from the event
                     - name: TENANT_TIER
-                      value: "" # Valid values are: silo, pool, hybrid
+                      value: ""  # Tenant tier to be replaced by actual data from the event
                     - name: RELEASE_VERSION
-                      value: "" # I.E. 0.0 or 1.0
+                      value: ""  # Release version to be replaced by actual data from the event
                     - name: REPO_URL
-                      value: "{aws_codecommit_flux_clone_url_ssh}"
+                      value: "https://github.com/iamharshrana/BlogSite"  # You can replace with actual value or template
                     - name: GIT_USER_EMAIL
-                      value: "{ssh_public_key_id}"
+                      value: "{ssh_public_key_id}"  # Replace with actual value
                     - name: GIT_USERNAME
-                      value: "{ssh_public_key_id}"
+                      value: "{ssh_public_key_id}"  # Replace with actual value
                     - name: GIT_BRANCH
-                      value: "main" # Can change based on your configs
+                      value: "main"  # Branch for cloning the repository
                 templates:
                   - name: tenant-provisioning
                     steps:
@@ -78,7 +81,7 @@ spec:
                   - metadata:
                       name: workdir
                     spec:
-                      storageClassName: gp2
+                      storageClassName: linode-block-storage-retain
                       accessModes: [ "ReadWriteOnce" ]
                       resources:
                         requests:
@@ -86,7 +89,7 @@ spec:
                 volumes:
                   - name: ssh-key
                     secret:
-                      secretName: github-ssh-key # Secret created earlier
+                      secretName: github-ssh-key  # Secret name for SSH key
                       items:
                         - key: ssh-privatekey
                           path: id_rsa
