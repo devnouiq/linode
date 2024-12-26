@@ -55,7 +55,7 @@ spec:
                     - name: RELEASE_VERSION
                       value: ""  # Release version to be replaced by actual data from the event
                     - name: REPO_URL
-                      value: "{aws_codecommit_flux_clone_url_ssh}"  # You can replace with actual value or template
+                      value: "https://github.com/devnouiq/linode"  # You can replace with actual value or template
                     - name: GIT_USER_EMAIL
                       value: "{ssh_public_key_id}"  # Replace with actual value
                     - name: GIT_USERNAME
