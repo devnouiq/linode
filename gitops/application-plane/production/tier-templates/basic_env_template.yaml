@@ -15,7 +15,7 @@ spec:
   interval: 1m0s
   chart:
     spec:
-      chart: helm-charts/helm-tenant-chart
+      chart: helm-tenant-chart
       version: "{RELEASE_VERSION}.x"
       sourceRef:
         kind: HelmRepository
