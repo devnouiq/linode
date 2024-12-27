@@ -14,7 +14,7 @@ spec:
   interval: 1m0s
   chart:
     spec:
-      chart: application-chart
+      chart: ./helm-charts/application-chart
       version: "0.0.x"
       sourceRef:
         kind: HelmRepository

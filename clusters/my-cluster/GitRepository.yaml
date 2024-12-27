@@ -1,7 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: linode-repo
+  name: helm-tenant-chart
   namespace: flux-system
 spec:
   interval: 1m
