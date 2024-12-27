@@ -45,3 +45,36 @@ apps:
       pathType: Prefix
       tls: []
     affinity: {}
+    storageSize: "1Gi" # Add this field for PVC
+
+  mysql:
+    enabled: true
+    useStatefulSet: true
+    replicaCount: 1
+    image:
+      repository: "mysql"       # Official MySQL image
+      tag: "8.0"                # Specify a stable MySQL version
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: false
+    service:
+      type: ClusterIP
+      port: 3306 # Port for the MySQL service
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 80
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    ingress:
+      enabled: false
+    affinity: {}

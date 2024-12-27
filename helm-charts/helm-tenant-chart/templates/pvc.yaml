@@ -4,9 +4,9 @@ metadata:
   name: wordpress-pvc
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.storageClassName | default "default-sc" }} # Ensure a default or configurable storage class
+  storageClassName: {{ $.Values.storageClassName | default "default-sc" }} # Use default if not provided
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ $.Values.wordpress.storageSize | default "1Gi" }} # Make storage size configurable
+      storage: {{ $.Values.apps.wordpress.storageSize | default "1Gi" }} # Provide a default if storageSize is missing
