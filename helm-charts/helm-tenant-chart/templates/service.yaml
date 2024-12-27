@@ -12,10 +12,10 @@ metadata:
     app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
     app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
 spec:
-  type: {{ $appConfig.service.type }}
+  type: {{ $appConfig.service.type | default "ClusterIP" }} # Default to ClusterIP if not defined
   ports:
-    - port: {{ $appConfig.service.port }}
-      targetPort: {{ if eq $appName "mysql" }}3306{{ else }}80{{ end }} # Simplified target port logic
+    - port: {{ $appConfig.service.port | default 80 }} # Default to port 80
+      targetPort: {{ if eq $appName "mysql" }}3306{{ else }}80{{ end }}
       protocol: TCP
       name: {{ if eq $appName "mysql" }}mysql{{ else }}http{{ end }}
   selector:

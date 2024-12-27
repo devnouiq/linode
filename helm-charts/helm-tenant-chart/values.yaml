@@ -23,7 +23,7 @@ apps:
       create: false
     service:
       type: ClusterIP
-      port: 80
+      port: 80 # Port for the WordPress service
     resources:
       limits:
         memory: 512Mi
@@ -41,7 +41,7 @@ apps:
     securityContext: {}
     ingress:
       enabled: true
-      className: "nginx"        # Updated to a generic ingress class
+      className: "nginx"
       pathType: Prefix
       tls: []
     affinity: {}
@@ -55,10 +55,10 @@ apps:
       tag: "8.0"                # Specify a stable MySQL version
       pullPolicy: IfNotPresent
     serviceAccount:
-      create: false             # Set to false if not required
+      create: false
     service:
       type: ClusterIP
-      port: 3306
+      port: 3306 # Port for the MySQL service
     resources:
       requests:
         memory: "512Mi"
