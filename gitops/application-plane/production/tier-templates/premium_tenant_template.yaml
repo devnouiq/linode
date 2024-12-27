@@ -18,7 +18,7 @@ spec:
       chart: helm-tenant-chart
       version: "{RELEASE_VERSION}.x"
       sourceRef:
-        kind: HelmRepository
+        kind: GitRepository
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}

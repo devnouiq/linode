@@ -14,10 +14,10 @@ spec:
   interval: 1m0s
   chart:
     spec:
-      chart: helm-tenant-chart
+      chart: helm-charts/helm-tenant-chart
       version: "0.0.x"
       sourceRef:
-        kind: HelmRepository
+        kind: GitRepository
         name: helm-tenant-chart
   values:
     tenantId: pool-1    
