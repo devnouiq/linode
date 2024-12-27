@@ -1,24 +1,18 @@
-{{- range $appName, $appConfig := .Values.apps }}
-{{- if $appConfig.enabled }}
----
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ $.Values.tenantId }}-{{ $appName }}"
-  namespace: {{ $.Values.tenantId }}
+  name: {{ .Release.Name }}-wordpress
+  namespace: {{ .Values.namespace | default "default" }}
   labels:
-    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
-    app.kubernetes.io/instance: "{{ $.Release.Name }}"
-    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
-    app.kubernetes.io/managed-by: "{{ $.Release.Service }}"
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  type: {{ $appConfig.service.type | default "ClusterIP" }} # Default to ClusterIP if not defined
+  type: {{ .Values.service.type | default "ClusterIP" }} # Default to ClusterIP if not set
   ports:
-    - port: {{ $appConfig.service.port | default 80 }} # Default to port 80
-      targetPort: {{ if eq $appName "mysql" }}3306{{ else }}80{{ end }}
+    - port: 80
+      targetPort: http
       protocol: TCP
-      name: {{ if eq $appName "mysql" }}mysql{{ else }}http{{ end }}
   selector:
-    app: "{{ $.Values.tenantId }}-{{ $appName }}"
-{{- end }}
-{{- end }}
+    app: {{ .Release.Name }}-wordpress
