@@ -57,9 +57,9 @@ spec:
                     - name: REPO_URL
                       value: "https://github.com/devnouiq/linode"  # You can replace with actual value or template
                     - name: GIT_USER_EMAIL
-                      value: "{ssh_public_key_id}"  # Replace with actual value
+                      value: "dev@nouiq.com"  # Replace with actual value
                     - name: GIT_USERNAME
-                      value: "{ssh_public_key_id}"  # Replace with actual value
+                      value: "devnouiq"  # Replace with actual value
                     - name: GIT_BRANCH
                       value: "main"  # Branch for cloning the repository
                 templates:

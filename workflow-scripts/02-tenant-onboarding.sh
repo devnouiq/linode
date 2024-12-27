@@ -62,13 +62,23 @@ get_tier_template_file() {
 configure_git() {
     local git_user_email="$1"
     local git_user_name="$2"
+
+    # Configure Git user details
     git config --global user.email "${git_user_email}"
     git config --global user.name "${git_user_name}"
+
+    # Ensure .ssh directory exists
+    mkdir -p /root/.ssh
+    chmod 700 /root/.ssh
+
+    # Create SSH config for GitHub
     cat <<EOF > /root/.ssh/config
-        Host github.com
-        User git
-        IdentityFile /root/.ssh/id_rsa
+Host github.com
+    User git
+    IdentityFile /root/.ssh/id_rsa
+    StrictHostKeyChecking no
 EOF
+
     chmod 600 /root/.ssh/config
 }
 
@@ -76,12 +86,19 @@ commit_files() {
     local repository_branch="$1"
     local tenant_id="$2"
     local tenant_tier="$3"
-    cd ${repo_root_path} || exit 1
+    cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
+
+    # Ensure remote URL uses SSH
+    git remote set-url origin git@github.com:devnouiq/linode.git
+
+    echo "Current directory: $(pwd)"
+    git remote -v
+
     git status
-    git pull
-    git add .
-    git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}"
-    git push origin "${repository_branch}"
+    git pull || { echo "Error pulling repository"; exit 1; }
+    git add . || { echo "Error staging changes"; exit 1; }
+    git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || { echo "Error committing changes"; exit 1; }
+    git push origin "${repository_branch}" || { echo "Error pushing changes"; exit 1; }
 }
 
 main "$@"

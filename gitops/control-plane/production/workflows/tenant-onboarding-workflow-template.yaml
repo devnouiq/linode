@@ -23,7 +23,7 @@ spec:
       container:
         image: docker.io/harshfps/workflow-scripts:latest # Replace with your Docker image name
         command: ["/bin/sh", "-c"]
-        args: ['echo "Cloning repository for {{workflow.parameters.TENANT_ID}}" && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}}']
+        args: ['cp /01-tenant-clone-repo.sh /mnt/vol/ && cd /mnt/vol && chmod +x 01-tenant-clone-repo.sh && echo "Cloning repository for {{workflow.parameters.TENANT_ID}}" && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && echo "Repository cloned successfully"']
         volumeMounts:
           - name: workdir
             mountPath: /mnt/vol
@@ -36,7 +36,7 @@ spec:
       container:
         image: docker.io/harshfps/workflow-scripts:latest  # Replace with your Docker image name
         command: ["/bin/sh", "-c"]
-        args: ['cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && ./02-tenant-onboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.RELEASE_VERSION}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}']
+        args: ['echo "Setting up SSH key..." && mkdir -p /root/.ssh && cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && echo "Testing SSH connection to GitHub..." && ssh -i /root/.ssh/id_rsa git@github.com || true && echo "Running tenant onboarding script..." && ./02-tenant-onboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.RELEASE_VERSION}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}']
         volumeMounts:
           - name: workdir
             mountPath: /mnt/vol

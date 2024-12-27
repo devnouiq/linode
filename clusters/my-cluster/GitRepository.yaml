@@ -1,11 +1,14 @@
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
-  name: wordpress-repo
+  name: linode-repo
   namespace: flux-system
 spec:
   interval: 1m
-  url: https://github.com/devnouiq/linode
+  url: https://github.com/devnouiq/linode.git
   ref:
     branch: main
-  ignore: "*.md"   # Skip syncing unnecessary files like markdowns
+  ignore: |
+    *.md
+    .gitignore
+    README.md
