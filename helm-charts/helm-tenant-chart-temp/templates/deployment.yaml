@@ -1,5 +1,5 @@
 {{- range $appName, $appConfig := .Values.apps }}
-{{- if and $appConfig.enabled (not (and (eq $appName "mysql") $appConfig.useStatefulSet)) }}
+{{- if $appConfig.enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -27,11 +27,9 @@ spec:
         app.kubernetes.io/instance: "{{ $.Release.Name }}"
         app: {{ $.Values.tenantId }}-{{ $appName }}
     spec:
-      {{- if $appConfig.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml $appConfig.imagePullSecrets | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ if and $appConfig.serviceAccount (hasKey $appConfig.serviceAccount "create") $appConfig.serviceAccount.create }}{{ $.Values.tenantId }}-{{ $appName }}{{ else }}default{{ end }}
+      serviceAccountName: {{ if $appConfig.serviceAccount.create }}{{ $.Values.tenantId }}-{{ $appName }}{{- else }}default{{- end }}
       securityContext:
         {{- toYaml $appConfig.podSecurityContext | nindent 8 }}
       containers:
@@ -43,41 +41,27 @@ spec:
           env:
             - name: ENVIRONMENT
               value: "{{ $.Values.tenantId }}"
-          {{- if eq $appName "wordpress" }}
-            - name: WORDPRESS_DB_HOST
-              value: "{{ $.Values.tenantId }}-mysql.{{ $.Values.tenantId }}.svc.cluster.local"
-            - name: WORDPRESS_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: MYSQL_ROOT_PASSWORD
-            - name: WORDPRESS_DB_USER
-              value: root
-            - name: WORDPRESS_DB_NAME
-              value: mysql
-          {{- end }}
           ports:
             - name: http
               containerPort: {{ $appConfig.service.port }}
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /{{ $appName }}
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /{{ $appName }}/readiness-probe
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
           resources:
             {{- toYaml $appConfig.resources | nindent 12 }}
-          {{- if eq $appName "wordpress" }}
-          volumeMounts:
-            - name: wordpress-data
-              mountPath: /var/www/html
-          {{- end }}
       nodeSelector:
         {{- toYaml $.Values.global.nodeSelector | nindent 8 }}
       affinity:
         {{- toYaml $appConfig.affinity | nindent 8 }}
       tolerations:
         {{- toYaml $.Values.global.tolerations | nindent 8 }}
-      {{- if eq $appName "wordpress" }}
-      volumes:
-        - name: wordpress-data
-          persistentVolumeClaim:
-            claimName: wordpress-pvc
-      {{- end }}
 {{- end }}
 {{- end }}

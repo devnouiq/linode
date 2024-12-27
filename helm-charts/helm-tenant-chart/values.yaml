@@ -1,0 +1,79 @@
+# Default values for tenant-chart.
+tenantId: "example-tenant"
+
+# Global settings for node selection and tolerations
+global:
+  nodeSelector:
+    node-type: applications
+  tolerations:
+    - key: "applications"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+# Application configurations
+apps:
+  wordpress:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: "wordpress"  # Official WordPress image
+      tag: "latest"            # Use the latest stable version
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: false
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 500m
+      requests:
+        memory: 256Mi
+        cpu: 250m
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    ingress:
+      enabled: true
+      className: "nginx"        # Updated to a generic ingress class
+      pathType: Prefix
+      tls: []
+    affinity: {}
+
+  mysql:
+    enabled: true
+    useStatefulSet: true
+    replicaCount: 1
+    image:
+      repository: "mysql"       # Official MySQL image
+      tag: "8.0"                # Specify a stable MySQL version
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: false             # Set to false if not required
+    service:
+      type: ClusterIP
+      port: 3306
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "500m"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 80
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    ingress:
+      enabled: false
+    affinity: {}

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-pvc
+  namespace: {{ $.Values.tenantId }}
+spec:
+  storageClassName: {{ $.Values.storageClassName | default "default-sc" }} # Ensure a default or configurable storage class
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.wordpress.storageSize | default "1Gi" }} # Make storage size configurable

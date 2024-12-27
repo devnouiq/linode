@@ -1,11 +1,11 @@
 {{- range $appName, $appConfig := .Values.apps }}
-{{- if $appConfig.enabled }}
+{{- if $appConfig.ingress.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: "{{ $.Values.tenantId }}-{{ $appName }}"
-  namespace: {{ $.Values.tenantId }}
+  namespace: {{ if and (not $appConfig.enabled) $appConfig.ingress.enabled }}{{ $appConfig.envId }}{{ else }}{{ $.Values.tenantId }}{{ end }}
   labels:
     app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
     app.kubernetes.io/instance: "{{ $.Release.Name }}"
@@ -15,10 +15,14 @@ spec:
   type: {{ $appConfig.service.type }}
   ports:
     - port: {{ $appConfig.service.port }}
-      targetPort: {{ if eq $appName "mysql" }}3306{{ else }}80{{ end }} # Simplified target port logic
+      targetPort: http
       protocol: TCP
-      name: {{ if eq $appName "mysql" }}mysql{{ else }}http{{ end }}
+      name: http
   selector:
+    {{- if and $appConfig.enabled (or $appConfig.ingress.enabled) }}
     app: "{{ $.Values.tenantId }}-{{ $appName }}"
+    {{- else }}
+    app: "{{ $appConfig.envId }}-{{ $appName }}"
+    {{- end }}
 {{- end }}
 {{- end }}
