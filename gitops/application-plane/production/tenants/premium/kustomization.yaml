@@ -2,10 +2,3 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - dummy-configmap.yaml
-  - tenant-b8f6d.yaml
-  - tenant-18f7f.yaml
-  - tenant-2e82f.yaml
-  - tenant-c7305.yaml
-  - tenant-f2a51.yaml
-  - tenant-4d855.yaml
-  - tenant-c367b.yaml
