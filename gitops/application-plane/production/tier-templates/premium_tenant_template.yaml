@@ -15,10 +15,10 @@ spec:
   interval: 1m0s
   chart:
     spec:
-      chart: helm-tenant-chart
+      chart: ./helm-charts/helm-tenant-chart
       version: "{RELEASE_VERSION}.x"
       sourceRef:
-        kind: HelmRepository
+        kind: GitRepository
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
