@@ -17,7 +17,7 @@ spec:
       chart: helm-charts/helm-tenant-chart
       version: "0.0.x"
       sourceRef:
-        kind: GitRepository
+        kind: 
         name: helm-tenant-chart
   values:
     tenantId: pool-1    
