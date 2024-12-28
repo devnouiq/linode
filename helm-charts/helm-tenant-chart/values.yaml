@@ -80,27 +80,27 @@ apps:
     storageClassName: linode-block-storage-retain # Explicitly set the storage class for MySQL PVC
     storageSize: "5Gi" # Added storage size for database persistence
   
-  # Just a placeholder for future apps
-  producer:
-    enabled: false 
-    service:
-      type: ClusterIP
-      port: 8080 
-    ingress:
-      enabled: false 
-    image:
-      repository: "nginx" # Use the official NGINX image
-      tag: "latest"       # Use the latest version available
-      pullPolicy: IfNotPresent # Default pull policy
+# Placeholder for future apps
+producer:
+  enabled: true # Enable the placeholder
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: false
+  image:
+    repository: "alpine" # Use a minimal and reliable placeholder image
+    tag: "latest"
+    pullPolicy: IfNotPresent
 
-  consumer:
-    enabled: false 
-    service:
-      type: ClusterIP
-      port: 9090 
-    ingress:
-      enabled: false 
-    image:
-      repository: "nginx" # Use the official NGINX image
-      tag: "latest"       # Use the latest version available
-      pullPolicy: IfNotPresent # Default pull policy
+consumer:
+  enabled: true # Enable the placeholder
+  service:
+    type: ClusterIP
+    port: 9090
+  ingress:
+    enabled: false
+  image:
+    repository: "alpine" # Use a minimal and reliable placeholder image
+    tag: "latest"
+    pullPolicy: IfNotPresent
