@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ $.Release.Name }}-{{ $appName }}-pvc # Ensure unique name per app
+  name: wordpress-pvc
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.storageClassName | default "linode-block-storage-retain" }} # Correct default value
+  storageClassName: {{ $.Values.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ $appConfig.storageSize | default "1Gi" }} # Use app-specific storageSize or default
+      storage: {{ $.Values.apps.wordpress.storageSize | default "1Gi" }} # Ensure app-specific default
