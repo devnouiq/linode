@@ -4,9 +4,22 @@ metadata:
   name: wordpress-pvc
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
+  storageClassName: {{ $.Values.apps.wordpress.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: {{ $.Values.apps.wordpress.storageSize | default "1Gi" }} # Ensure app-specific default
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-data
+  namespace: {{ $.Values.tenantId }}
+spec:
+  storageClassName: {{ $.Values.apps.mysql.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.apps.mysql.storageSize | default "5Gi" }} # Ensure app-specific default
