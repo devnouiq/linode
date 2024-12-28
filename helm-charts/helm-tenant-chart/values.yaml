@@ -6,10 +6,6 @@ global:
   storageClassName: linode-block-storage-retain
   nodeSelector:
     node-type: applications
-  tolerations:
-    - key: "applications"
-      operator: "Exists"
-      effect: "NoSchedule"
   namespace: default # Added a global namespace for consistency
 
 # Application configurations
