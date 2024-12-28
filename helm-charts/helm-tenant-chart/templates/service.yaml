@@ -4,28 +4,20 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Release.Name }}-{{ $appName }}
-  namespace: {{ $.Values.namespace | default "default" }}
+  name: {{ $.Values.tenantId }}-{{ $appName }}
+  namespace: {{ $.Values.tenantId | default "default" }}
   labels:
     app.kubernetes.io/name: {{ $.Chart.Name }}
     app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/version: {{ $.Chart.AppVersion }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
-  type: {{ $appConfig.service.type | default "ClusterIP" }} # Default to ClusterIP if not set
+  type: {{ $appConfig.service.type | default "ClusterIP" }}
   ports:
-    {{- if and (hasKey $appConfig.service "port") (hasKey $appConfig.service "targetPort") }}
-    - port: {{ $appConfig.service.port | default 80 }} # Default to port 80 if not set
-      targetPort: {{ $appConfig.service.targetPort | default "http" }} # Default to "http" if not set
+    - port: {{ $appConfig.service.port | default 80 }}
+      targetPort: {{ $appConfig.service.targetPort | default $appConfig.service.port | default 80 }}
       protocol: TCP
-    {{- else }}
-    - port: 80 # Default to port 80
-      targetPort: http # Default to targetPort "http"
-      protocol: TCP
-    {{- end }}
   selector:
-    app: {{ $.Release.Name }}-{{ $appName }}
+    app: {{ $.Values.tenantId }}-{{ $appName }}
 {{- end }}
-{{- else }}
-# Skip creating a Service resource for this app if not enabled or missing service definition
 {{- end }}
