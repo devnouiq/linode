@@ -4,8 +4,6 @@ tenantId: "example-tenant"
 # Global settings for node selection and tolerations
 global:
   storageClassName: linode-block-storage-retain
-  nodeSelector:
-    node-type: applications
   namespace: default # Added a global namespace for consistency
 
 # Application configurations
