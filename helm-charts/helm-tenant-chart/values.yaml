@@ -43,6 +43,7 @@ apps:
       pathType: Prefix
       tls: []
     affinity: {}
+    storageClassName: linode-block-storage-retain # Explicitly set the storage class for WordPress PVC
     storageSize: "1Gi" # Add this field for PVC
 
   mysql:
@@ -76,9 +77,10 @@ apps:
     ingress:
       enabled: false
     affinity: {}
+    storageClassName: linode-block-storage-retain # Explicitly set the storage class for MySQL PVC
     storageSize: "5Gi" # Added storage size for database persistence
   
-  #Just a place holder for future apps
+  # Just a placeholder for future apps
   producer:
     enabled: false 
     service:
@@ -87,14 +89,18 @@ apps:
     ingress:
       enabled: false 
     image:
-      tag: "0.1" 
+      repository: "nginx" # Use the official NGINX image
+      tag: "latest"       # Use the latest version available
+      pullPolicy: IfNotPresent # Default pull policy
 
-  consumer:
+consumer:
+  enabled: false 
+  service:
+    type: ClusterIP
+    port: 9090 
+  ingress:
     enabled: false 
-    service:
-      type: ClusterIP
-      port: 9090 
-    ingress:
-      enabled: false 
-    image:
-      tag: "0.1" 
+  image:
+    repository: "nginx" # Use the official NGINX image
+    tag: "latest"       # Use the latest version available
+    pullPolicy: IfNotPresent # Default pull policy
