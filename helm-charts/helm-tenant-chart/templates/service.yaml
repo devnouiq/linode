@@ -14,7 +14,7 @@ metadata:
 spec:
   type: {{ $appConfig.service.type | default "ClusterIP" }} # Default to ClusterIP if not set
   ports:
-    - port: {{ $appConfig.service.port }}
+    - port: {{ $appConfig.service.port | default 80 }} # Default to port 80 if not set
       targetPort: http
       protocol: TCP
   selector:
