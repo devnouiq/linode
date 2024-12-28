@@ -9,6 +9,7 @@ global:
     - key: "applications"
       operator: "Exists"
       effect: "NoSchedule"
+  namespace: default # Added a global namespace for consistency
 
 # Application configurations
 apps:
@@ -42,6 +43,8 @@ apps:
     ingress:
       enabled: true
       className: "nginx"
+      annotations: # Added annotations for better control
+        nginx.ingress.kubernetes.io/rewrite-target: /
       pathType: Prefix
       tls: []
     affinity: {}
@@ -78,3 +81,4 @@ apps:
     ingress:
       enabled: false
     affinity: {}
+    storageSize: "5Gi" # Added storage size for database persistence
