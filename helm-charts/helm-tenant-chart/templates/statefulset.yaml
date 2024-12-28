@@ -42,7 +42,7 @@ spec:
           image: "{{ $.Values.apps.mysql.image.repository }}:{{ $.Values.apps.mysql.image.tag }}"
           imagePullPolicy: {{ $.Values.apps.mysql.image.pullPolicy }}
           args:
-            - "--ignore-db-dir=lost+found"
+            # Removed "--ignore-db-dir=lost+found" since it is incompatible with MySQL 8
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -72,5 +72,5 @@ spec:
         storageClassName: {{ $.Values.apps.mysql.storageClassName | default "linode-block-storage-retain" }} # Ensure configurability
         resources:
           requests:
-            storage: 5Gi
+            storage: {{ $.Values.apps.mysql.storageSize | default "5Gi" }} # Default storage size
 {{- end }}
