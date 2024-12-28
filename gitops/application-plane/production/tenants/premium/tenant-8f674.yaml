@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-8f674
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tenant-8f674-premium
+  namespace: flux-system
+spec:
+  releaseName: tenant-8f674-premium
+  targetNamespace: tenant-8f674
+  storageNamespace: tenant-8f674
+  interval: 1m0s
+  chart:
+    spec:
+      chart: ./helm-charts/helm-tenant-chart
+      version: "1.9.x"
+      sourceRef:
+        kind: GitRepository
+        name: helm-tenant-chart
+  values:
+    tenantId: tenant-8f674
+    apps:
+      producer:
+        enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
+        ingress:
+          enabled: true
+        image:
+          tag: "0.1" # {"$imagepolicy": "flux-system:producer-image-policy:tag"}
+      consumer:
+        enabled: true # Silo deployment -- premium tier has a dedicated deployment for each tenant
+        ingress:
+          enabled: true
+        image:
+          tag: "0.1" # {"$imagepolicy": "flux-system:consumer-image-policy:tag"}
