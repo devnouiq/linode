@@ -93,14 +93,14 @@ apps:
       tag: "latest"       # Use the latest version available
       pullPolicy: IfNotPresent # Default pull policy
 
-consumer:
-  enabled: false 
-  service:
-    type: ClusterIP
-    port: 9090 
-  ingress:
+  consumer:
     enabled: false 
-  image:
-    repository: "nginx" # Use the official NGINX image
-    tag: "latest"       # Use the latest version available
-    pullPolicy: IfNotPresent # Default pull policy
+    service:
+      type: ClusterIP
+      port: 9090 
+    ingress:
+      enabled: false 
+    image:
+      repository: "nginx" # Use the official NGINX image
+      tag: "latest"       # Use the latest version available
+      pullPolicy: IfNotPresent # Default pull policy
