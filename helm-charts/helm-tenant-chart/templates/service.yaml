@@ -1,5 +1,5 @@
 {{- range $appName, $appConfig := .Values.apps }}
-{{- if $appConfig.enabled }}
+{{- if and $appConfig.enabled (hasKey $appConfig "service") }}
 ---
 apiVersion: v1
 kind: Service
@@ -20,4 +20,6 @@ spec:
   selector:
     app: {{ $.Release.Name }}-{{ $appName }}
 {{- end }}
+{{- else }}
+# If service is not defined or enabled, skip creating a Service resource for this app
 {{- end }}
