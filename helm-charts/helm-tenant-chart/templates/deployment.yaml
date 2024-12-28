@@ -58,7 +58,7 @@ spec:
           {{- end }}
           ports:
             - name: http
-              containerPort: {{ $appConfig.service.port }}
+              containerPort: {{ if and (hasKey $appConfig "service") (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
               protocol: TCP
           resources:
             {{- toYaml $appConfig.resources | nindent 12 }}
