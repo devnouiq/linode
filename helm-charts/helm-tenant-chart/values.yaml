@@ -82,3 +82,23 @@ apps:
       enabled: false
     affinity: {}
     storageSize: "5Gi" # Added storage size for database persistence
+  #Just a place holder for future apps
+  producer:
+    enabled: false 
+    service:
+      type: ClusterIP
+      port: 8080 
+    ingress:
+      enabled: false 
+    image:
+      tag: "0.1" 
+
+  consumer:
+    enabled: false 
+    service:
+      type: ClusterIP
+      port: 9090 
+    ingress:
+      enabled: false 
+    image:
+      tag: "0.1" 
