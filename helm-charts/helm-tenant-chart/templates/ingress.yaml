@@ -31,6 +31,6 @@ spec:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ (hasKey $appConfig "service") | ternary ($appConfig.service.port | default 80) 80 }}
+              number: {{ (and (hasKey $appConfig "service") (hasKey $appConfig.service "port")) | ternary ($appConfig.service.port | default 80) 80 }}
 {{- end }}
 {{- end }}

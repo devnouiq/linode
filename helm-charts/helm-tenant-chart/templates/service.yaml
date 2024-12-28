@@ -14,12 +14,18 @@ metadata:
 spec:
   type: {{ $appConfig.service.type | default "ClusterIP" }} # Default to ClusterIP if not set
   ports:
+    {{- if and (hasKey $appConfig.service "port") (hasKey $appConfig.service "targetPort") }}
     - port: {{ $appConfig.service.port | default 80 }} # Default to port 80 if not set
-      targetPort: http
+      targetPort: {{ $appConfig.service.targetPort | default "http" }} # Default to "http" if not set
       protocol: TCP
+    {{- else }}
+    - port: 80 # Default to port 80
+      targetPort: http # Default to targetPort "http"
+      protocol: TCP
+    {{- end }}
   selector:
     app: {{ $.Release.Name }}-{{ $appName }}
 {{- end }}
 {{- else }}
-# If service is not defined or enabled, skip creating a Service resource for this app
+# Skip creating a Service resource for this app if not enabled or missing service definition
 {{- end }}
