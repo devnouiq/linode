@@ -1,5 +1,5 @@
 {{- range $appName, $appConfig := .Values.apps }}
-{{- if and $appConfig.enabled $appConfig.autoscaling.enabled }}
+{{- if and $appConfig.enabled (and $appConfig.autoscaling (hasKey $appConfig.autoscaling "enabled") $appConfig.autoscaling.enabled) }}
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
