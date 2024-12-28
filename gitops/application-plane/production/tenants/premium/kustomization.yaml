@@ -4,3 +4,4 @@ resources:
   - dummy-configmap.yaml
   
   - tenant-ed8bd.yaml
+  - tenant-268a7.yaml
