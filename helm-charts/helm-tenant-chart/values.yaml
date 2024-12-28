@@ -3,6 +3,7 @@ tenantId: "example-tenant"
 
 # Global settings for node selection and tolerations
 global:
+  storageClassName: linode-block-storage-retain
   nodeSelector:
     node-type: applications
   tolerations:
@@ -82,6 +83,7 @@ apps:
       enabled: false
     affinity: {}
     storageSize: "5Gi" # Added storage size for database persistence
+  
   #Just a place holder for future apps
   producer:
     enabled: false 
