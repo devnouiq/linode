@@ -4,7 +4,7 @@ metadata:
   name: wordpress-pvc
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.storageClassName | default "default-sc" }} # Use default if not provided
+  storageClassName: {{ $.Values.storageClassName | default "linode-block-storage-retain" }} # Use default if not provided
   accessModes:
     - ReadWriteOnce
   resources:
