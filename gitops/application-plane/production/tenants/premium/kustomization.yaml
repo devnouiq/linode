@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - dummy-configmap.yaml
   - tenant-7d228.yaml
+  - tenant-74dfe.yaml
