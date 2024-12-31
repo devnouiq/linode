@@ -26,6 +26,5 @@ spec:
   tls:
   - hosts:
     - "{{ $.Values.tenantId }}.givemeipdomain.duckdns.org"
-    secretName: "{{ $.Values.tenantId }}-tls"  # Automatically managed by Traefik
 {{- end }}
 {{- end }}
