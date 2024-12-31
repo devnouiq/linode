@@ -4,7 +4,7 @@ metadata:
   name: rclone-sync
   namespace: traefik
 spec:
-  schedule: "0 0 * * *"  # Runs daily at midnight
+  schedule: "0 * * * *" # Runs every hour
   jobTemplate:
     spec:
       template:
@@ -14,16 +14,9 @@ spec:
               image: rclone/rclone:latest
               args:
                 - sync
-                - /data/acme.json
-                - linode:armored-host
+                - /ssl
+                - linode:<bucket-name>
                 - --config=/config/rclone.conf
-                - -vv
-              volumeMounts:
-                - name: ssl
-                  mountPath: /data
-                - name: rclone-config
-                  mountPath: /config/rclone.conf
-                  subPath: rclone.conf
               env:
                 - name: AWS_ACCESS_KEY_ID
                   valueFrom:
@@ -35,11 +28,22 @@ spec:
                     secretKeyRef:
                       name: linode-s3-credentials
                       key: secret_key
+                - name: RCLONE_CONFIG_LINODE_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_LINODE_PROVIDER
+                  value: Linode
+                - name: RCLONE_CONFIG_LINODE_ENDPOINT
+                  value: us-ord-1.linodeobjects.com
+              volumeMounts:
+                - name: ssl
+                  mountPath: /ssl
+                - name: rclone-config
+                  mountPath: /config/rclone.conf
+                  subPath: rclone.conf
           restartPolicy: OnFailure
           volumes:
             - name: ssl
-              persistentVolumeClaim:
-                claimName: traefik  # Replace with your PVC name
+              emptyDir: {}
             - name: rclone-config
               configMap:
                 name: rclone-config
