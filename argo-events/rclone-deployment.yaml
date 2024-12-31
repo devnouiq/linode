@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rclone-sync
+  namespace: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rclone-sync
+  template:
+    metadata:
+      labels:
+        app: rclone-sync
+    spec:
+      containers:
+        - name: rclone
+          image: rclone/rclone:latest
+          args:
+            - sync
+            - /ssl
+            - linode:<bucket-name>
+            - --config=/config/rclone.conf
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: linode-s3-credentials
+                  key: access_key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: linode-s3-credentials
+                  key: secret_key
+            - name: RCLONE_CONFIG_LINODE_TYPE
+              value: s3
+            - name: RCLONE_CONFIG_LINODE_PROVIDER
+              value: Linode
+            - name: RCLONE_CONFIG_LINODE_ENDPOINT
+              value: us-ord-1.linodeobjects.com
+          volumeMounts:
+            - name: ssl
+              mountPath: /ssl
+            - name: rclone-config
+              mountPath: /config/rclone.conf
+              subPath: rclone.conf
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+      volumes:
+        - name: ssl
+          emptyDir: {}  # Replace with PersistentVolumeClaim if needed
+        - name: rclone-config
+          configMap:
+            name: rclone-config

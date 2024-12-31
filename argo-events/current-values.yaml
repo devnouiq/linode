@@ -1,0 +1,10 @@
+additionalArguments:
+  - "--certificatesresolvers.default.acme.tlschallenge=true"
+  - "--certificatesresolvers.default.acme.email=harsh.rana6263@gmail.com"  # Replace with your email
+  - "--certificatesresolvers.default.acme.storage=/data/acme.json"
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  path: /data  # Persistent storage for certificates

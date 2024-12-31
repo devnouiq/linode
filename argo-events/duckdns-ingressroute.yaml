@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: duckdns-route
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hostharshwosql.duckdns.org`)  # Your DuckDNS domain
+      kind: Rule
+      services:
+        - name: tenant-6ce24-wordpress  # Correct service name
+          namespace: tenant-6ce24       # Correct namespace
+          port: 80                      # Service port
+  tls:
+    certResolver: default               # Matches your Traefik configuration
