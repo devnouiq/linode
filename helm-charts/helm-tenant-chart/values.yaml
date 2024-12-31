@@ -41,6 +41,8 @@ apps:
 
   mysql:
     enabled: true
+    ingress:
+      enabled: false
     useStatefulSet: true
     replicaCount: 1
     image:
