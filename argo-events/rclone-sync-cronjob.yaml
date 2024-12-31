@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rclone-sync
+  namespace: traefik
+spec:
+  schedule: "0 0 * * *"  # Runs daily at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: rclone
+              image: rclone/rclone:latest
+              args:
+                - sync
+                - /data/acme.json
+                - linode:armored-host
+                - --config=/config/rclone.conf
+                - -vv
+              volumeMounts:
+                - name: ssl
+                  mountPath: /data
+                - name: rclone-config
+                  mountPath: /config/rclone.conf
+                  subPath: rclone.conf
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: linode-s3-credentials
+                      key: access_key
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: linode-s3-credentials
+                      key: secret_key
+          restartPolicy: OnFailure
+          volumes:
+            - name: ssl
+              persistentVolumeClaim:
+                claimName: traefik  # Replace with your PVC name
+            - name: rclone-config
+              configMap:
+                name: rclone-config

@@ -8,3 +8,8 @@ persistence:
   accessMode: ReadWriteOnce
   size: 1Gi
   path: /data  # Persistent storage for certificates
+
+podSecurityContext:
+  fsGroup: 65532
+  runAsUser: 65532
+  runAsGroup: 65532

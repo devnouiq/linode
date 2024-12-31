@@ -6,31 +6,26 @@ kind: Ingress
 metadata:
   name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
   namespace: {{ $.Values.tenantId }}
-  labels:
-    app.kubernetes.io/name: "{{ $.Chart.Name }}-{{ $appName }}"
-    app.kubernetes.io/instance: "{{ $.Release.Name }}"
-    app.kubernetes.io/version: "{{ $.Chart.AppVersion }}"
-    app.kubernetes.io/managed-by: "Helm"
   annotations:
-    {{- if eq $appConfig.ingress.className "alb" }}
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/target-type: "ip"
-    alb.ingress.kubernetes.io/group.name: "tenants-lb"
-    {{- end }}
-    {{- with $appConfig.ingress.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    kubernetes.io/ingress.class: "traefik"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
-  ingressClassName: {{ $appConfig.ingress.className | quote | default "nginx" }}
+  ingressClassName: "traefik"
   rules:
-  - http:
+  - host: "{{ $.Values.tenantId }}.givemeipdomain.duckdns.org"
+    http:
       paths:
       - path: /
-        pathType: {{ $appConfig.ingress.pathType | default "ImplementationSpecific" }}
+        pathType: Prefix
         backend:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ if and (hasKey $appConfig "service") (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
+              number: {{ $appConfig.service.port | default 80 }}
+  tls:
+  - hosts:
+    - "{{ $.Values.tenantId }}.givemeipdomain.duckdns.org"
+    secretName: "{{ $.Values.tenantId }}-tls"  # Automatically managed by Traefik
 {{- end }}
 {{- end }}

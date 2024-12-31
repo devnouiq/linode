@@ -1,10 +1,11 @@
 # Default values for tenant-chart.
 tenantId: "example-tenant"
+host: "example-tenant.givemeipdomain.duckdns.org"
 
 # Global settings for node selection and tolerations
 global:
   storageClassName: linode-block-storage-retain
-  namespace: default # Added a global namespace for consistency
+  namespace: default
 
 # Application configurations
 apps:
@@ -12,14 +13,14 @@ apps:
     enabled: true
     replicaCount: 1
     image:
-      repository: "wordpress"  # Official WordPress image
-      tag: "latest"            # Use the latest stable version
+      repository: "wordpress"
+      tag: "latest"
       pullPolicy: IfNotPresent
     serviceAccount:
       create: false
     service:
       type: ClusterIP
-      port: 80 # Port for the WordPress service
+      port: 80
     resources:
       limits:
         memory: 512Mi
@@ -37,28 +38,29 @@ apps:
     securityContext: {}
     ingress:
       enabled: true
-      className: "nginx"
-      annotations: # Added annotations for better control
-        nginx.ingress.kubernetes.io/rewrite-target: /
+      className: "traefik"
+      annotations:
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/router.tls: "true"
       pathType: Prefix
       tls: []
     affinity: {}
-    storageClassName: linode-block-storage-retain # Explicitly set the storage class for WordPress PVC
-    storageSize: "1Gi" # Add this field for PVC
+    storageClassName: linode-block-storage-retain
+    storageSize: "1Gi"
 
   mysql:
     enabled: true
     useStatefulSet: true
     replicaCount: 1
     image:
-      repository: "mysql"       # Official MySQL image
-      tag: "8.0"                # Specify a stable MySQL version
+      repository: "mysql"
+      tag: "8.0"
       pullPolicy: IfNotPresent
     serviceAccount:
       create: false
     service:
       type: ClusterIP
-      port: 3306 # Port for the MySQL service
+      port: 3306
     resources:
       requests:
         memory: "512Mi"
@@ -77,12 +79,11 @@ apps:
     ingress:
       enabled: false
     affinity: {}
-    storageClassName: linode-block-storage-retain # Explicitly set the storage class for MySQL PVC
-    storageSize: "5Gi" # Added storage size for database persistence
-  
-# Placeholder for future apps
+    storageClassName: linode-block-storage-retain
+    storageSize: "5Gi"
+
 producer:
-  enabled: true # Enable the placeholder
+  enabled: true
   replicaCount: 1
   service:
     type: ClusterIP
@@ -90,7 +91,7 @@ producer:
   ingress:
     enabled: false
   image:
-    repository: "nginx" # Use a lightweight and reliable placeholder image
+    repository: "nginx"
     tag: "latest"
     pullPolicy: IfNotPresent
   resources:
@@ -102,7 +103,7 @@ producer:
       cpu: 50m
 
 consumer:
-  enabled: true # Enable the placeholder
+  enabled: true
   replicaCount: 1
   service:
     type: ClusterIP
@@ -110,7 +111,7 @@ consumer:
   ingress:
     enabled: false
   image:
-    repository: "nginx" # Use a lightweight and reliable placeholder image
+    repository: "nginx"
     tag: "latest"
     pullPolicy: IfNotPresent
   resources:
