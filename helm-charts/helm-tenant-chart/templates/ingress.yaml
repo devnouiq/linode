@@ -13,7 +13,7 @@ metadata:
 spec:
   ingressClassName: "traefik"
   rules:
-  - host: "{{ $.Values.host }}"
+  - host: "{{ $.Values.tenantId }}.test1.faralpha.com"  # Use dynamic subdomain
     http:
       paths:
       - path: /
@@ -25,6 +25,6 @@ spec:
               number: {{ if and $appConfig.service (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
-    - "{{ $.Values.host }}"
+    - "{{ $.Values.tenantId }}.test1.faralpha.com"
 {{- end }}
 {{- end }}

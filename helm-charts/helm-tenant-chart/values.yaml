@@ -1,6 +1,6 @@
 # Default values for tenant-chart.
-tenantId: "{tenantid}"  # Dynamically set tenantId
-host: "{tenantid}.test1.faralpha.com"  # Dynamically set the host
+tenantId: "example-tenant"  # This will be dynamically replaced for each tenant
+host: "{{ .tenantId }}.test1.faralpha.com"  # Dynamically constructed host
 
 # Global settings for node selection and tolerations
 global:
