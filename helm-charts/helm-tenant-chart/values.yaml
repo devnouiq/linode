@@ -1,6 +1,6 @@
 # Default values for tenant-chart.
-tenantId: "test1"
-host: "test1.faralpha.com"
+tenantId: "example-tenant"
+host: "example-tenant.test1.faralpha.com"
 
 # Global settings for node selection and tolerations
 global:
