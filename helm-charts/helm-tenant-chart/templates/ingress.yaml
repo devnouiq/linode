@@ -5,7 +5,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
-  namespace: {{ $.Values.tenantId }}
+  namespace: "{{ $.Values.tenantId }}"
   annotations:
     kubernetes.io/ingress.class: "traefik"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
@@ -13,7 +13,7 @@ metadata:
 spec:
   ingressClassName: "traefik"
   rules:
-  - host: "{{ $.Values.tenantId }}.test1.faralpha.com"  # Use dynamic subdomain
+  - host: "{{ $.Values.host }}"  # Static domain
     http:
       paths:
       - path: /
@@ -22,9 +22,9 @@ spec:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ if and $appConfig.service (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
+              number: {{ $appConfig.service.port }}
   tls:
   - hosts:
-    - "{{ $.Values.tenantId }}.test1.faralpha.com"
+    - "{{ $.Values.host }}"
 {{- end }}
 {{- end }}

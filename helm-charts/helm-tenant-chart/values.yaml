@@ -1,6 +1,6 @@
 # Default values for tenant-chart.
 tenantId: "example-tenant"  # This will be dynamically replaced for each tenant
-host: "{{ .tenantId }}.test1.faralpha.com"  # Dynamically constructed host
+host: "test1.faralpha.com"  # Single static domain
 
 # Global settings for node selection and tolerations
 global:
@@ -28,14 +28,6 @@ apps:
       requests:
         memory: 256Mi
         cpu: 250m
-    autoscaling:
-      enabled: false
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPUUtilizationPercentage: 80
-    podAnnotations: {}
-    podSecurityContext: {}
-    securityContext: {}
     ingress:
       enabled: true
       className: "traefik"
@@ -44,7 +36,6 @@ apps:
         traefik.ingress.kubernetes.io/router.tls: "true"
       pathType: Prefix
       tls: []
-    affinity: {}
     storageClassName: linode-block-storage-retain
     storageSize: "1Gi"
 
@@ -68,16 +59,5 @@ apps:
       limits:
         memory: "1Gi"
         cpu: "1"
-    autoscaling:
-      enabled: false
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPUUtilizationPercentage: 80
-    podAnnotations: {}
-    podSecurityContext: {}
-    securityContext: {}
-    ingress:
-      enabled: false
-    affinity: {}
     storageClassName: linode-block-storage-retain
     storageSize: "5Gi"
