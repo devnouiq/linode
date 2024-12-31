@@ -22,7 +22,7 @@ spec:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ $appConfig.service.port | default 80 }}
+              number: {{ if and $appConfig.service (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
     - "{{ $.Values.tenantId }}.givemeipdomain.duckdns.org"
