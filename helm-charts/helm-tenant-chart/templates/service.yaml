@@ -12,7 +12,7 @@ metadata:
     app.kubernetes.io/version: {{ $.Chart.AppVersion }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
-  type: {{ $appConfig.service.type | default "ClusterIP" }}
+  type: {{ $appConfig.service.type | default "ClusterIP" }}  # Will dynamically use LoadBalancer or ClusterIP
   ports:
     - port: {{ $appConfig.service.port | default 80 }}
       targetPort: {{ $appConfig.service.targetPort | default $appConfig.service.port | default 80 }}

@@ -19,7 +19,7 @@ apps:
     serviceAccount:
       create: false
     service:
-      type: ClusterIP
+      type: LoadBalancer  # Changed to LoadBalancer
       port: 80
     resources:
       limits:
@@ -52,7 +52,7 @@ apps:
     serviceAccount:
       create: false
     service:
-      type: ClusterIP
+      type: ClusterIP  # Keeping MySQL as ClusterIP
       port: 3306
     resources:
       requests:
