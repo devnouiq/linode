@@ -28,6 +28,5 @@ spec:
   tls:
   - hosts:
     - "{{ $.Values.host }}"                                        # Dynamically set the user-provided domain for TLS
-    secretName: "{{ $.Values.tenantId }}-tls-secret"              # Define a custom secret for TLS certificates
 {{- end }}
 {{- end }}
