@@ -1,6 +1,6 @@
 # Default values for tenant-chart.
 tenantId: "example-tenant"  # This will be dynamically replaced for each tenant
-host: "givemeipdomain.duckdns.org"  # Single static domain
+host: "test1.faralpha.com"  # Single static domain
 
 # Global settings for node selection and tolerations
 global:

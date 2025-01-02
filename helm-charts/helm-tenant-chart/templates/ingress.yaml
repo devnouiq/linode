@@ -1,16 +1,6 @@
 {{- range $appName, $appConfig := .Values.apps }}
 {{- if and $appConfig.enabled (hasKey $appConfig "ingress") $appConfig.ingress.enabled }}
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: "{{ $.Values.tenantId }}-https-redirect"
-  namespace: "{{ $.Values.tenantId }}"
-spec:
-  redirectScheme:
-    scheme: https
-    permanent: true
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -18,9 +8,8 @@ metadata:
   namespace: "{{ $.Values.tenantId }}"
   annotations:
     kubernetes.io/ingress.class: "traefik"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: "{{ $.Values.tenantId }}-https-redirect" # Apply the redirect middleware here
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"  # Use only the HTTPS entry point
+    traefik.ingress.kubernetes.io/router.tls: "true"              # Enable TLS for HTTPS
 spec:
   ingressClassName: "traefik"
   rules:
@@ -33,9 +22,10 @@ spec:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ if and $appConfig.service (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
+              number: {{ if and $appConfig.service (hasKey $appConfig.service.port) }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
     - "{{ $.Values.host }}"
+    secretName: "{{ $.Values.tenantId }}-tls-secret"  # Define a custom secret for TLS certificates
 {{- end }}
 {{- end }}

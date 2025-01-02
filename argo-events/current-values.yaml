@@ -1,4 +1,10 @@
 additionalArguments:
+  - "--entrypoints.web.address=:80"
+  - "--entrypoints.websecure.address=:443"
+  - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+  - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+  - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+  - "--entrypoints.websecure.http.tls=true"
   - "--certificatesresolvers.default.acme.tlschallenge=true"
   - "--certificatesresolvers.default.acme.email=harsh.rana6263@gmail.com"  # Replace with your email
   - "--certificatesresolvers.default.acme.storage=/data/acme.json"
