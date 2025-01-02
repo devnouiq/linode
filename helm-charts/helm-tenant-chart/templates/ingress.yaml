@@ -13,7 +13,7 @@ metadata:
 spec:
   ingressClassName: "traefik"
   rules:
-  - host: "{{ $.Values.host }}"
+  - host: "{{ $.Values.host }}"  # Dynamically set the user-provided domain
     http:
       paths:
       - path: /
@@ -25,7 +25,7 @@ spec:
               number: {{ if and (hasKey $appConfig "service") (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
-    - "{{ $.Values.host }}"
+    - "{{ $.Values.host }}"  # Dynamically set the user-provided domain for TLS
     secretName: "{{ $.Values.tenantId }}-tls-secret"  # Define a custom secret for TLS certificates
 {{- end }}
 {{- end }}

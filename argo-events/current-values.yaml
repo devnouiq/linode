@@ -6,7 +6,7 @@ additionalArguments:
   - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
   - "--entrypoints.websecure.http.tls=true"
   - "--certificatesresolvers.default.acme.tlschallenge=true"
-  - "--certificatesresolvers.default.acme.email=harsh.rana6263@gmail.com"  # Replace with your email
+  - "--certificatesresolvers.default.acme.email=harshexample.com"
   - "--certificatesresolvers.default.acme.storage=/data/acme.json"
 
 persistence:

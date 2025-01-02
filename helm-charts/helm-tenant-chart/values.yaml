@@ -1,6 +1,5 @@
-# Default values for tenant-chart.
 tenantId: "example-tenant"  # This will be dynamically replaced for each tenant
-host: "test1.faralpha.com"  # Single static domain
+host: "test1.faralpha.com"  # Set this dynamically based on user input
 
 # Global settings for node selection and tolerations
 global:
@@ -19,7 +18,7 @@ apps:
     serviceAccount:
       create: false
     service:
-      type: LoadBalancer  # Changed to LoadBalancer
+      type: LoadBalancer
       port: 80
     resources:
       limits:
@@ -52,7 +51,7 @@ apps:
     serviceAccount:
       create: false
     service:
-      type: ClusterIP  # Keeping MySQL as ClusterIP
+      type: ClusterIP
       port: 3306
     resources:
       requests:
