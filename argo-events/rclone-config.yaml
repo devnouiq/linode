@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rclone-config
+  namespace: traefik
+data:
+  rclone.conf: |
+    [linode]
+    type = s3
+    provider = Linode
+    endpoint = ${LINODE_ENDPOINT}
+    access_key_id = ${LINODE_ACCESS_KEY_ID}
+    secret_access_key = ${LINODE_SECRET_ACCESS_KEY}

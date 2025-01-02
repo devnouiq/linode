@@ -1,18 +1,39 @@
 additionalArguments:
-  - "--entrypoints.web.address=:80"
-  - "--entrypoints.websecure.address=:443"
+  - "--entrypoints.web.address=:8081"                      # Use non-privileged port for HTTP
+  - "--entrypoints.websecure.address=:8443"                # Use non-privileged port for HTTPS
   - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
   - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
   - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
   - "--entrypoints.websecure.http.tls=true"
-  - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
-  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+  - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"  # Replace with your email
+  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"       # Location for ACME storage
   - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+
 persistence:
-  enabled: true
+  enabled: true                                           # Enable persistence
   accessMode: ReadWriteOnce
-  size: 1Gi
+  size: 1Gi                                               # Persistent volume size
+  path: /data                                             # Path to store ACME file
+
 podSecurityContext:
-  fsGroup: 65532
-  runAsUser: 65532
-  runAsGroup: 65532
+  fsGroup: 65532                                          # Group ID for Traefik process
+  runAsUser: 65532                                        # Run Traefik as non-root user
+  runAsGroup: 65532                                       # Group ID for Traefik user
+
+initContainers:                                           # Init container to fix permissions
+  - name: fix-permissions
+    image: busybox
+    command: ["sh", "-c", "chmod 600 /data/acme.json || true"]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+
+service:
+  type: LoadBalancer                                      # Expose service as LoadBalancer
+  ports:
+    - name: web
+      port: 80                                            # Map external HTTP traffic to port 8080
+      targetPort: 8080
+    - name: websecure
+      port: 443                                           # Map external HTTPS traffic to port 8443
+      targetPort: 8443

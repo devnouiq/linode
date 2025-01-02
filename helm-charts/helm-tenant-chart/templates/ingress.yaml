@@ -7,25 +7,27 @@ metadata:
   name: "{{ $.Values.tenantId }}-ingress-{{ $appName }}"
   namespace: "{{ $.Values.tenantId }}"
   annotations:
-    kubernetes.io/ingress.class: "traefik"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"  # Use only the HTTPS entry point
+    kubernetes.io/ingress.class: "traefik"                         # Specify Traefik as the ingress class
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"  # Use the HTTPS entry point
     traefik.ingress.kubernetes.io/router.tls: "true"              # Enable TLS for HTTPS
+    traefik.ingress.kubernetes.io/router.tls.certresolver: "letsencrypt"  # Use Let's Encrypt for automatic cert generation
+    traefik.ingress.kubernetes.io/router.middlewares: "{{ $.Values.middleware | default "" }}"  # Add middleware dynamically if specified
 spec:
-  ingressClassName: "traefik"
+  ingressClassName: "traefik"                                      # Explicitly set ingress class name
   rules:
-  - host: "{{ $.Values.host }}"  # Dynamically set the user-provided domain
+  - host: "{{ $.Values.host }}"                                    # Dynamically set the user-provided domain
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: "{{ $.Values.tenantId }}-{{ $appName }}"
+            name: "{{ $.Values.tenantId }}-{{ $appName }}"         # Map to service dynamically
             port:
               number: {{ if and (hasKey $appConfig "service") (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
-    - "{{ $.Values.host }}"  # Dynamically set the user-provided domain for TLS
-    secretName: "{{ $.Values.tenantId }}-tls-secret"  # Define a custom secret for TLS certificates
+    - "{{ $.Values.host }}"                                        # Dynamically set the user-provided domain for TLS
+    secretName: "{{ $.Values.tenantId }}-tls-secret"              # Define a custom secret for TLS certificates
 {{- end }}
 {{- end }}
