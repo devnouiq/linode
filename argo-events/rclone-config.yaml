@@ -8,6 +8,6 @@ data:
     [linode]
     type = s3
     provider = Linode
-    endpoint = ${LINODE_ENDPOINT}
-    access_key_id = ${LINODE_ACCESS_KEY_ID}
-    secret_access_key = ${LINODE_SECRET_ACCESS_KEY}
+    access_key_id = G7PSEO5AH8MRL6ZB8NJX 
+    secret_access_key = we9fw4aMMPM6PBoiOH9eKgEaHPKBZCJObCo7lhre
+    endpoint = us-ord-1.linodeobjects.com

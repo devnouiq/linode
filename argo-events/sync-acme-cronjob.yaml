@@ -1,36 +1,49 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: sync-acme-json
+  name: rclone-sync
   namespace: traefik
 spec:
-  schedule: "*/30 * * * *"  # Sync every 30 minutes
+  schedule: "* * * * *" # Runs every minute
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: rclone
-            image: rclone/rclone:latest
-            envFrom:
-              - secretRef:
-                  name: linode-object-storage-config
-            volumeMounts:
-            - name: traefik-data
-              mountPath: /data
-            - name: rclone-config
-              mountPath: /config
-              subPath: rclone.conf
-            command:
-              - /bin/sh
-              - -c
-              - |
-                rclone copy /data/acme.json linode:armored-host --config /config/rclone.conf
-          volumes:
-          - name: traefik-data
-            persistentVolumeClaim:
-              claimName: traefik
-          - name: rclone-config
-            configMap:
-              name: rclone-config
+            - name: rclone
+              image: rclone/rclone:latest
+              args:
+                - sync
+                - /ssl
+                - linode:armored-host
+                - --config=/config/rclone.conf
+              env:
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: linode-s3-credentials
+                      key: access_key
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: linode-s3-credentials
+                      key: secret_key
+                - name: RCLONE_CONFIG_LINODE_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_LINODE_PROVIDER
+                  value: Linode
+                - name: RCLONE_CONFIG_LINODE_ENDPOINT
+                  value: us-ord-1.linodeobjects.com
+              volumeMounts:
+                - name: ssl
+                  mountPath: /ssl
+                - name: rclone-config
+                  mountPath: /config/rclone.conf
+                  subPath: rclone.conf
           restartPolicy: OnFailure
+          volumes:
+            - name: ssl
+              emptyDir: {}  # Temporary directory for the sync operation
+            - name: rclone-config
+              configMap:
+                name: rclone-config
