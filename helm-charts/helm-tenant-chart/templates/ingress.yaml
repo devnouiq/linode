@@ -1,5 +1,5 @@
 {{- range $appName, $appConfig := .Values.apps }}
-{{- if and $appConfig.enabled (hasKey $appConfig "ingress") $appConfig.ingress.enabled }}
+{{- if and (hasKey $appConfig "enabled") $appConfig.enabled (hasKey $appConfig "ingress") $appConfig.ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -22,7 +22,7 @@ spec:
           service:
             name: "{{ $.Values.tenantId }}-{{ $appName }}"
             port:
-              number: {{ if and $appConfig.service (hasKey $appConfig.service.port) }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
+              number: {{ if and (hasKey $appConfig "service") (hasKey $appConfig.service "port") }}{{ $appConfig.service.port | default 80 }}{{ else }}80{{ end }}
   tls:
   - hosts:
     - "{{ $.Values.host }}"
