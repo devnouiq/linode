@@ -1,5 +1,5 @@
 tenantId: "example-tenant"  # This will be dynamically replaced for each tenant
-host: "test2.faralpha.com"  # Set this dynamically based on user input
+host: "test1.faralpha.com"  # Set this dynamically based on user input
 
 # Global settings for node selection and tolerations
 global:
