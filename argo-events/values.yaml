@@ -5,7 +5,7 @@ additionalArguments:
   - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
   - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
   - "--entrypoints.websecure.http.tls=true"
-  - "--certificatesresolvers.letsencrypt.acme.email=faralpha615@gmail.com"  # Replace with your email
+  - "--certificatesresolvers.letsencrypt.acme.email=harsh.rana6263@gmail.com"  # Replace with your email
   - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"       # Location for ACME storage
   - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
 
