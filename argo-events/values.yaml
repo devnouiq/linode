@@ -5,16 +5,13 @@ additionalArguments:
   - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
   - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
   - "--entrypoints.websecure.http.tls=true"
-  - "--certificatesresolvers.default.acme.tlschallenge=true"
-  - "--certificatesresolvers.default.acme.email=harsh.rana6263@gmail.com"
-  - "--certificatesresolvers.default.acme.storage=/data/acme.json"
-
+  - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
+  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
+  - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
 persistence:
   enabled: true
   accessMode: ReadWriteOnce
   size: 1Gi
-  path: /data  # Persistent storage for certificates
-
 podSecurityContext:
   fsGroup: 65532
   runAsUser: 65532
