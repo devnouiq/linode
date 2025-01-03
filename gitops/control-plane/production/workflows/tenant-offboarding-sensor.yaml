@@ -1,0 +1,101 @@
+apiVersion: argoproj.io/v1alpha1
+kind: EventSource
+metadata:
+  name: tenant-offboarding
+  namespace: argo-events
+spec:
+  amqp:
+    rbmq:
+      url: amqp://argo_user:newpassword@rabbitmq-service.argo-events:5672/
+      exchangeName: rbmq
+      exchangeType: fanout
+      queueDeclare:
+        durable: true
+        name: offboarding_queue
+      routingKey: "offboarding-key"
+      jsonBody: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: linode-rbmq-offboarding
+  namespace: argo-events
+spec:
+  template:
+    serviceAccountName: operate-workflow-sa
+  dependencies:
+    - name: tenant-provisioning-dep
+      eventSourceName: tenant-offboarding
+      eventName: rbmq
+  triggers:
+    - template:
+        name: tenant-offboarding-template
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: tenant-offboarding-
+                namespace: argo-workflows
+              spec:
+                serviceAccountName: operate-workflow-sa
+                entrypoint: tenant-provisioning
+                synchronization:
+                  mutex:
+                    name: workflow
+                arguments:
+                  parameters:
+                    - name: TENANT_ID
+                      value: ""  # Populated from the event data
+                    - name: TENANT_TIER
+                      value: ""  # Populated from the event data
+                    - name: REPO_URL
+                      value: "https://github.com/devnouiq/linode"
+                    - name: GIT_USER_EMAIL
+                      value: "dev@nouiq.com"
+                    - name: GIT_USERNAME
+                      value: "devnouiq"
+                    - name: GIT_BRANCH
+                      value: "main"
+                templates:
+                  - name: tenant-provisioning
+                    steps:
+                      - - name: clone-repository
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: clone-repository
+                      - - name: validate-if-tenant-exists
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: validate-if-tenant-exists
+                      - - name: remove-tenant-helm-release
+                          templateRef:
+                            name: tenant-offboarding-template
+                            template: remove-tenant-helm-release
+                volumeClaimTemplates:
+                  - metadata:
+                      name: workdir
+                    spec:
+                      storageClassName: linode-block-storage-retain
+                      accessModes: [ "ReadWriteOnce" ]
+                      resources:
+                        requests:
+                          storage: 1Gi
+                volumes:
+                  - name: ssh-key
+                    secret:
+                      secretName: github-ssh-key
+                      items:
+                        - key: ssh-privatekey
+                          path: id_rsa
+          parameters:
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_id
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.tenant_tier
+              dest: spec.arguments.parameters.1.value
