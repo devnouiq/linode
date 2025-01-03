@@ -57,7 +57,7 @@ spec:
     - metadata:
         name: workdir
       spec:
-        storageClassName: linode-block-storage-retain
+        storageClassName: linode-block-storage
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
@@ -71,4 +71,4 @@ spec:
             path: id_rsa
   hooks:
     exit:
-      - template: cleanup-volumes
+      template: cleanup-volumes  # Correct reference to the cleanup template

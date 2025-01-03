@@ -78,7 +78,7 @@ spec:
                   - metadata:
                       name: workdir
                     spec:
-                      storageClassName: linode-block-storage-retain
+                      storageClassName: linode-block-storage
                       accessModes: [ "ReadWriteOnce" ]
                       resources:
                         requests:

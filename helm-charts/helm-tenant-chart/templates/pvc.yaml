@@ -4,7 +4,7 @@ metadata:
   name: wordpress-pvc
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.apps.wordpress.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
+  storageClassName: {{ $.Values.apps.wordpress.storageClassName | default "linode-block-storage" }} # Correct default storage class
   accessModes:
     - ReadWriteOnce
   resources:
@@ -17,7 +17,7 @@ metadata:
   name: mysql-data
   namespace: {{ $.Values.tenantId }}
 spec:
-  storageClassName: {{ $.Values.apps.mysql.storageClassName | default "linode-block-storage-retain" }} # Correct default storage class
+  storageClassName: {{ $.Values.apps.mysql.storageClassName | default "linode-block-storage" }} # Correct default storage class
   accessModes:
     - ReadWriteOnce
   resources:
