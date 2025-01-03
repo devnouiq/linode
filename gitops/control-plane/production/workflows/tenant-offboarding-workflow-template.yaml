@@ -5,6 +5,7 @@ metadata:
   namespace: argo-workflows
 spec:
   serviceAccountName: operate-workflow-sa  # Updated service account
+  onExit: cleanup-volumes  # Add cleanup onExit hook
   templates:
     - name: validate-if-tenant-exists
       container:
@@ -23,7 +24,7 @@ spec:
       container:
         image: docker.io/harshfps/workflow-scripts:latest  # Replace with your Docker image
         command: ["/bin/sh", "-c"]
-        args: ['cp /01-tenant-clone-repo.sh /mnt/vol/ && cd /mnt/vol && chmod +x 01-tenant-clone-repo.sh && echo "Cloning repository for {{workflow.parameters.TENANT_ID}}" && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}} && echo "Repository cloned successfully"']
+        args: ['cp /01-tenant-clone-repo.sh /mnt/vol/ && cd /mnt/vol && chmod +x 01-tenant-clone-repo.sh && ./01-tenant-clone-repo.sh {{workflow.parameters.REPO_URL}} {{workflow.parameters.GIT_BRANCH}}']
         volumeMounts:
           - name: workdir
             mountPath: /mnt/vol
@@ -36,7 +37,7 @@ spec:
       container:
         image: docker.io/harshfps/workflow-scripts:latest  # Replace with your Docker image
         command: ["/bin/sh", "-c"]
-        args: ['echo "Setting up SSH key..." && mkdir -p /root/.ssh && cp /mnt/ssh/id_rsa /root/.ssh/ && chmod 600 /root/.ssh/id_rsa && echo "Running tenant offboarding script..." && ./04-tenant-offboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}']
+        args: ['./04-tenant-offboarding.sh {{workflow.parameters.TENANT_ID}} {{workflow.parameters.TENANT_TIER}} {{workflow.parameters.GIT_USER_EMAIL}} {{workflow.parameters.GIT_USERNAME}} {{workflow.parameters.GIT_BRANCH}}']
         volumeMounts:
           - name: workdir
             mountPath: /mnt/vol
@@ -45,6 +46,14 @@ spec:
         env:
           - name: GIT_SSH_COMMAND
             value: "ssh -i /root/.ssh/id_rsa"
+    - name: cleanup-volumes  # Cleanup step
+      script:
+        image: docker.io/alpine:latest
+        command: [sh]
+        source: |
+          #!/bin/sh
+          echo "Cleaning up PVCs for workflow: {{workflow.name}}"
+          kubectl delete pvc --selector=workflows.argoproj.io/workflow={{workflow.name}} || true
   volumeClaimTemplates:
     - metadata:
         name: workdir
