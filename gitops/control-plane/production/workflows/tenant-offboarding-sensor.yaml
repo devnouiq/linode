@@ -5,14 +5,14 @@ metadata:
   namespace: argo-events
 spec:
   amqp:
-    rbmq:
+    rbargo:  # Updated to match the new exchange name
       url: amqp://argo_user:newpassword@rabbitmq-service.argo-events:5672/
-      exchangeName: rbmq
-      exchangeType: fanout
+      exchangeName: rbargo
+      exchangeType: direct  # Updated to direct exchange
       queueDeclare:
         durable: true
         name: offboarding_queue
-      routingKey: "offboarding-key"
+      routingKey: "offboarding"  # Updated routing key
       jsonBody: true
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -26,7 +26,7 @@ spec:
   dependencies:
     - name: tenant-provisioning-dep
       eventSourceName: tenant-offboarding
-      eventName: rbmq
+      eventName: rbargo  # Updated to match the new exchange name
   triggers:
     - template:
         name: tenant-offboarding-template
@@ -48,9 +48,9 @@ spec:
                 arguments:
                   parameters:
                     - name: TENANT_ID
-                      value: ""  # Populated from the event data
+                      value: ""
                     - name: TENANT_TIER
-                      value: ""  # Populated from the event data
+                      value: ""
                     - name: REPO_URL
                       value: "https://github.com/devnouiq/linode"
                     - name: GIT_USER_EMAIL

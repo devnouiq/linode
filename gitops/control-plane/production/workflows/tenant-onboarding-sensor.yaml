@@ -5,14 +5,14 @@ metadata:
   namespace: argo-events
 spec:
   amqp:
-    rbmq:
+    rbargo:  # Updated to match the new exchange name
       url: amqp://argo_user:newpassword@rabbitmq-service.argo-events:5672/
-      exchangeName: rbmq
-      exchangeType: fanout
+      exchangeName: rbargo
+      exchangeType: direct  # Updated to direct exchange
       queueDeclare:
         durable: true
         name: onboarding_queue
-      routingKey: "onboarding-key"
+      routingKey: "onboarding" 
       jsonBody: true
 
 ---
@@ -23,11 +23,11 @@ metadata:
   namespace: argo-events
 spec:
   template:
-    serviceAccountName: operate-workflow-sa  # Updated service account
+    serviceAccountName: operate-workflow-sa
   dependencies:
     - name: tenant-provisioning-dep
       eventSourceName: tenant-onboarding
-      eventName: rbmq
+      eventName: rbargo  # Updated to match the new exchange name
   triggers:
     - template:
         name: tenant-onboarding-template
@@ -41,7 +41,7 @@ spec:
                 generateName: tenant-onboarding-
                 namespace: argo-workflows
               spec:
-                serviceAccountName: operate-workflow-sa  # Updated service account
+                serviceAccountName: operate-workflow-sa
                 entrypoint: tenant-provisioning
                 synchronization:
                   mutex:
@@ -49,19 +49,19 @@ spec:
                 arguments:
                   parameters:
                     - name: TENANT_ID
-                      value: ""  # Tenant ID to be replaced by actual data from the event
+                      value: ""
                     - name: TENANT_TIER
-                      value: ""  # Tenant tier to be replaced by actual data from the event
+                      value: ""
                     - name: RELEASE_VERSION
-                      value: ""  # Release version to be replaced by actual data from the event
+                      value: ""
                     - name: REPO_URL
-                      value: "https://github.com/devnouiq/linode"  # You can replace with actual value or template
+                      value: "https://github.com/devnouiq/linode"
                     - name: GIT_USER_EMAIL
-                      value: "dev@nouiq.com"  # Replace with actual value
+                      value: "dev@nouiq.com"
                     - name: GIT_USERNAME
-                      value: "devnouiq"  # Replace with actual value
+                      value: "devnouiq"
                     - name: GIT_BRANCH
-                      value: "main"  # Branch for cloning the repository
+                      value: "main"
                 templates:
                   - name: tenant-provisioning
                     steps:
@@ -89,7 +89,7 @@ spec:
                 volumes:
                   - name: ssh-key
                     secret:
-                      secretName: github-ssh-key  # Secret name for SSH key
+                      secretName: github-ssh-key
                       items:
                         - key: ssh-privatekey
                           path: id_rsa
