@@ -1,15 +1,4 @@
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: wordpress-pvc
-  namespace: {{ $.Values.tenantId }}
-spec:
-  storageClassName: {{ $.Values.apps.wordpress.storageClassName | default "linode-block-storage" }} # Correct default storage class
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ $.Values.apps.wordpress.storageSize | default "1Gi" }} # Ensure app-specific default
+{{- if not (and (hasKey .Values.apps.mysql "useStatefulSet") .Values.apps.mysql.useStatefulSet) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -23,3 +12,17 @@ spec:
   resources:
     requests:
       storage: {{ $.Values.apps.mysql.storageSize | default "5Gi" }} # Ensure app-specific default
+{{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-pvc
+  namespace: {{ $.Values.tenantId }}
+spec:
+  storageClassName: {{ $.Values.apps.wordpress.storageClassName | default "linode-block-storage" }} # Correct default storage class
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.apps.wordpress.storageSize | default "1Gi" }} # Ensure app-specific default
