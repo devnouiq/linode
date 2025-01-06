@@ -54,7 +54,7 @@ spec:
                       value: ""
                     - name: RELEASE_VERSION
                       value: ""
-                    - name: 
+                    - name: DOMAIN_NAME
                       value: ""
                     - name: REPO_URL
                       value: "https://github.com/devnouiq/linode"

@@ -12,6 +12,7 @@ main() {
     local git_user_email="$4"
     local git_user_name="$5"
     local repository_branch="$6"
+    local domain_name="$7"  # Added DOMAIN_NAME parameter
 
     # get tier template file based on the tier for the tenant being provisioned 
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
@@ -20,7 +21,7 @@ main() {
     
     # create the tenant helm release file based on the tier template file and tenant id
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/premium/tenant-1.yaml)
-    create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file"
+    create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file" "$domain_name"
     
     # configure git user and ssh key so we can push changes to the gitops repo
     configure_git "${git_user_email}" "${git_user_name}"
@@ -34,6 +35,7 @@ create_helm_release() {
     local tenant_tier="$2"
     local release_version="$3"
     local tier_template_file="$4"
+    local domain_name="$5"  # Added DOMAIN_NAME parameter
     
     # tenant helm release file name based on tenant_tier and tenant_id e.g. (premium/tenant-1.yaml)
     local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
@@ -41,9 +43,10 @@ create_helm_release() {
     # make a copy of the tier template file onto the tenant helm release file
     cp "${tier_template_file}" "${manifests_path}/${tenant_manifest_file}"
     
-    # replace the tenant id and release version in the tenant helm release file
+    # replace the tenant id, release version, and domain name in the tenant helm release file
     sed -i "s|{TENANT_ID}|${tenant_id}|g" "${manifests_path}/${tenant_manifest_file}"
     sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${manifests_path}/${tenant_manifest_file}"
+    sed -i "s|{DOMAIN_NAME}|${domain_name}|g" "${manifests_path}/${tenant_manifest_file}"  # Added DOMAIN_NAME substitution
     
     # update the kustomization file with the new tenant helm release file
     printf "\n  - %s.yaml" "${tenant_id}" >> "${manifests_path}/${tenant_tier}/kustomization.yaml"    
