@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-a6f01
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tenant-a6f01-premium
+  namespace: flux-system
+spec:
+  releaseName: tenant-a6f01-premium
+  targetNamespace: tenant-a6f01
+  storageNamespace: tenant-a6f01
+  interval: 1m0s
+  chart:
+    spec:
+      chart: ./helm-charts/helm-tenant-chart
+      version: "1.9.x"
+      sourceRef:
+        kind: GitRepository
+        name: helm-tenant-chart
+  values:
+    tenantId: tenant-a6f01
+    host: test8.faralpha.com
+    apps: {}
+    
