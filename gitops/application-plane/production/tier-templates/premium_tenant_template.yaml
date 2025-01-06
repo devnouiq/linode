@@ -22,4 +22,6 @@ spec:
         name: helm-tenant-chart
   values:
     tenantId: {TENANT_ID}
+    host: {DOMAIN_NAME}
     apps: {}
+    

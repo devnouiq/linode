@@ -54,6 +54,8 @@ spec:
                       value: ""
                     - name: RELEASE_VERSION
                       value: ""
+                    - name: 
+                      value: ""
                     - name: REPO_URL
                       value: "https://github.com/devnouiq/linode"
                     - name: GIT_USER_EMAIL
@@ -106,3 +108,7 @@ spec:
                 dependencyName: tenant-provisioning-dep
                 dataKey: body.release_version
               dest: spec.arguments.parameters.2.value
+            - src:
+                dependencyName: tenant-provisioning-dep
+                dataKey: body.domain_name  # Map domain_name from RabbitMQ payload
+              dest: spec.arguments.parameters.3.value
