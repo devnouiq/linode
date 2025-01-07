@@ -4,3 +4,5 @@ resources:
   - dummy-configmap.yaml
 
 
+
+  - tenant-9f32c.yaml
