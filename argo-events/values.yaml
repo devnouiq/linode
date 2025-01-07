@@ -11,9 +11,10 @@ additionalArguments:
 
 persistence:
   enabled: true                                           # Enable persistence
-  accessMode: ReadWriteOnce
+  accessMode: ReadWriteOnce                               # Use RWX for shared access (requires RWX storage)
   size: 1Gi                                               # Persistent volume size
   path: /data                                             # Path to store ACME file
+  storageClass: linode-block-storage-retain               # Use NFS storage class (replace if applicable)
 
 podSecurityContext:
   fsGroup: 65532                                          # Group ID for Traefik process

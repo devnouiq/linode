@@ -5,6 +5,9 @@ metadata:
   namespace: traefik
 spec:
   schedule: "*/5 * * * *"  # Runs every 5 minutes
+  concurrencyPolicy: Forbid  # Prevent overlapping jobs
+  successfulJobsHistoryLimit: 1  # Retain only the latest successful job
+  failedJobsHistoryLimit: 1  # Retain only the latest failed job
   jobTemplate:
     spec:
       template:
@@ -34,7 +37,7 @@ spec:
                 - name: rclone-config
                   mountPath: /config/rclone.conf
                   subPath: rclone.conf
-          restartPolicy: OnFailure
+          restartPolicy: OnFailure  # Restart the job only if it fails
           volumes:
             - name: data
               persistentVolumeClaim:
