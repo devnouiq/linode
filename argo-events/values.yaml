@@ -6,7 +6,7 @@ additionalArguments:
   - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
   - "--entrypoints.websecure.http.tls=true"
   - "--certificatesresolvers.letsencrypt.acme.email=harsh.rana6263@gmail.com"  # Replace with your email
-  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"       # Location for ACME storage
+  - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"         # Location for ACME storage
   - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
 
 persistence:
@@ -25,6 +25,14 @@ initContainers:
   - name: fix-permissions
     image: busybox
     command: ["sh", "-c", "touch /data/acme.json && chmod 600 /data/acme.json"]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+
+containers:
+  - name: fix-permissions-sidecar
+    image: busybox
+    command: ["sh", "-c", "while true; do chmod 600 /data/acme.json; sleep 10; done"]
     volumeMounts:
       - name: data
         mountPath: /data

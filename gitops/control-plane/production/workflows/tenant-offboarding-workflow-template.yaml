@@ -5,6 +5,7 @@ metadata:
   namespace: argo-workflows
 spec:
   serviceAccountName: operate-workflow-sa  # Updated service account
+  ttlSecondsAfterFinished: 300  # Automatically delete pods 5 minutes after completion
   templates:
     - name: validate-if-tenant-exists
       container:

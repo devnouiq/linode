@@ -25,12 +25,12 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: linode-s3-credentials
-                      key: access_key
+                      key: access_key_id  # Corrected key name
                 - name: AWS_SECRET_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:
                       name: linode-s3-credentials
-                      key: secret_key
+                      key: secret_access_key  # Corrected key name
               volumeMounts:
                 - name: data
                   mountPath: /data
