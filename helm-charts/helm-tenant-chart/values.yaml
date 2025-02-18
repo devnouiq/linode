@@ -18,7 +18,7 @@ apps:
     serviceAccount:
       create: false
     service:
-      type: LoadBalancer
+      type: NodePort
       port: 80
     resources:
       limits:
