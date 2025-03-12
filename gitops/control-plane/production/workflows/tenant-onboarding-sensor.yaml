@@ -43,9 +43,6 @@ spec:
               spec:
                 serviceAccountName: operate-workflow-sa
                 entrypoint: tenant-provisioning
-                synchronization:
-                  mutex:
-                    name: workflow
                 arguments:
                   parameters:
                     - name: TENANT_ID
