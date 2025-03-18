@@ -3,4 +3,8 @@ kind: Kustomization
 resources:
   - dummy-configmap.yaml
 
+<<<<<<< Updated upstream
   - tenant-161369.yaml
+=======
+  - tenant-e1aa38.yaml
+>>>>>>> Stashed changes
