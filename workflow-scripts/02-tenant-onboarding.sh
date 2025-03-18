@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# map templates and helm release folders -- this is mounted on 01-tenant-clone-repo.sh
+# Define paths
 repo_root_path="/mnt/vol/linode"
 tier_templates_path="${repo_root_path}/gitops/application-plane/production/tier-templates"
 manifests_path="${repo_root_path}/gitops/application-plane/production/tenants"
@@ -13,17 +13,17 @@ main() {
     local git_user_name="$5"
     local repository_branch="$6"
 
-    # get tier template file based on the tier for the tenant being provisioned 
+    # Get the appropriate tier template
     local tier_template_file
     tier_template_file=$(get_tier_template_file "$tenant_tier")
     
-    # create the tenant helm release file based on the tier template file and tenant id
+    # Create the tenant Helm release with its own kustomization.yaml
     create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file"
     
-    # configure git user and ssh key so we can push changes to the gitops repo
+    # Configure Git user
     configure_git "${git_user_email}" "${git_user_name}"
 
-    # push new helm release for the tenant and kustomization update to the gitops repo
+    # Push changes to Git
     commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
 }
 
@@ -33,26 +33,32 @@ create_helm_release() {
     local release_version="$3"
     local tier_template_file="$4"
 
-    local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
-    local kustomization_file="${manifests_path}/${tenant_tier}/kustomization.yaml"
+    # Define the new folder path for the tenant
+    local tenant_folder="${manifests_path}/${tenant_tier}/tenant-${tenant_id}"
+    local tenant_manifest_file="${tenant_folder}/tenant-${tenant_id}.yaml"
+    local kustomization_file="${tenant_folder}/kustomization.yaml"
 
-    # Copy template to create tenant manifest
-    cp "${tier_template_file}" "${manifests_path}/${tenant_manifest_file}"
+    # Create the tenant-specific directory
+    mkdir -p "${tenant_folder}"
 
-    # Replace placeholders
-    sed -i "s|{TENANT_ID}|${tenant_id}|g" "${manifests_path}/${tenant_manifest_file}"
-    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${manifests_path}/${tenant_manifest_file}"
+    # Copy the tier template to create the tenant manifest
+    cp "${tier_template_file}" "${tenant_manifest_file}"
 
-    # Ensure the kustomization file is updated safely
-    echo "Adding tenant ${tenant_id} to ${kustomization_file}"
+    # Replace placeholders in the manifest file
+    sed -i "s|{TENANT_ID}|${tenant_id}|g" "${tenant_manifest_file}"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${tenant_manifest_file}"
 
-    # Avoid duplicate entries and concurrent modifications
-    (grep -v "${tenant_id}.yaml" "${kustomization_file}" || true) > "${kustomization_file}.tmp"
-    echo "  - ${tenant_id}.yaml" >> "${kustomization_file}.tmp"
+    echo "Created Helm release for ${tenant_id} in ${tenant_folder}"
 
-    # Sort and remove duplicates
-    sort -u "${kustomization_file}.tmp" > "${kustomization_file}"
-    rm "${kustomization_file}.tmp"
+    # Generate a unique kustomization.yaml for this tenant
+    cat > "${kustomization_file}" <<EOF
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - tenant-${tenant_id}.yaml
+EOF
+
+    echo "Created kustomization.yaml for ${tenant_id} in ${tenant_folder}"
 }
 
 get_tier_template_file() {
@@ -104,18 +110,16 @@ commit_files() {
     while [[ $attempt -le $max_retries ]]; do
         echo "Attempt ${attempt}/${max_retries} to commit changes."
 
-        # Stash changes to prevent conflicts
-        git stash push -m "Stashing before pull for tenant ${tenant_id}" || echo "Nothing to stash."
-
         # Pull latest changes with rebase
         git pull --autostash --rebase || {
             echo "Merge conflict detected. Retrying..."
             git rebase --abort
             git stash pop || { echo "Error applying stash"; exit 1; }
 
-            # Ensure correct appending of kustomization.yaml
+            # Ensure tenant folder is correctly added
             create_helm_release "${tenant_id}" "${tenant_tier}" "latest_version"
 
+            # Stage, commit, and push changes
             git add .
             git commit -am "Resolved merge conflict for ${tenant_id}" || {
                 echo "Error committing merge on attempt ${attempt}."
@@ -132,9 +136,6 @@ commit_files() {
             echo "Successfully committed and pushed on retry attempt ${attempt}."
             return
         }
-
-        # Apply stashed changes
-        git stash pop || echo "No stashed changes to apply."
 
         # Stage and commit
         git add .
