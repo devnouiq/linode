@@ -1,8 +1,14 @@
   - dummy-configmap.yaml
   - tenant-1ebb4a.yaml
+<<<<<<< Updated upstream
   - tenant-78234e/
   - tenant-9566e0.yaml
   - tenant-d442a3.yaml
+=======
+  - tenant-1ff15f.yaml
+  - tenant-78234e/
+  - tenant-9566e0.yaml
+>>>>>>> Stashed changes
   - tenant-e0b841/
   - tenant-e984c0.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
