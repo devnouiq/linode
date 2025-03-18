@@ -4,3 +4,10 @@ resources:
   - dummy-configmap.yaml
   - tenant-b3bae4.yaml
   - tenant-889327.yaml
+  - tenant-5cdd9e.yaml
+  - tenant-d766e5.yaml
+<<<<<<< Updated upstream
+  - tenant-1c4698.yaml
+=======
+  - tenant-e623df.yaml
+>>>>>>> Stashed changes
