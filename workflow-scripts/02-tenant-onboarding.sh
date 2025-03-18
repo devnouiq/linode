@@ -181,14 +181,25 @@ resolve_kustomization_conflict() {
     # Backup the conflicted file before processing
     cp "${kustomization_file}" "${kustomization_file}.bak"
 
-    # Remove conflict markers and only keep valid tenant entries
-    awk '!/<<<<<<<|=======|>>>>>>>/ {print}' "${kustomization_file}.bak" | sort -u > "${kustomization_file}"
+    # Ensure correct YAML structure
+    {
+        echo "apiVersion: kustomize.config.k8s.io/v1beta1"
+        echo "kind: Kustomization"
+        echo "resources:"
+        echo "  - dummy-configmap.yaml"
+    } > "${kustomization_file}.tmp"
+
+    # Extract only valid tenant entries (removing conflict markers)
+    grep -E "^\s+- tenant-[a-f0-9]+.yaml" "${kustomization_file}.bak" | sort -u >> "${kustomization_file}.tmp"
 
     # Ensure the final kustomization.yaml has a trailing newline
-    echo "" >> "${kustomization_file}"
+    echo "" >> "${kustomization_file}.tmp"
 
+    # Replace the original file with the cleaned-up version
+    mv "${kustomization_file}.tmp" "${kustomization_file}"
     rm "${kustomization_file}.bak"
-    echo "Successfully resolved merge conflict in ${kustomization_file}."
+
+    echo "Successfully resolved and reformatted ${kustomization_file}."
 }
 
 main "$@"
