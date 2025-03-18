@@ -1,0 +1,13 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tenants-kustomization
+  namespace: flux-system
+spec:
+  interval: 1m
+  path: ./gitops/application-plane/production/tenants/premium
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: helm-tenant-chart
+  timeout: 2m
