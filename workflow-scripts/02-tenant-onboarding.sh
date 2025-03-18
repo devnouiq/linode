@@ -14,6 +14,12 @@ main() {
     local repository_branch="$6"
     local domain_name="$7"  # Added DOMAIN_NAME parameter
 
+    # configure git user and ssh key so we can push changes to the gitops repo
+    configure_git "${git_user_email}" "${git_user_name}"
+
+    # switch to the tenant-specific branch first
+    switch_to_branch "${tenant_id}"
+
     # get tier template file based on the tier for the tenant being provisioned 
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
     local tier_template_file
@@ -23,11 +29,28 @@ main() {
     # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/premium/tenant-1.yaml)
     create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file" "$domain_name"
     
-    # configure git user and ssh key so we can push changes to the gitops repo
-    configure_git "${git_user_email}" "${git_user_name}"
-
     # push new helm release for the tenant and kustomization update to the gitops repo
-    commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
+    commit_files "${tenant_id}" "${tenant_tier}"
+}
+
+switch_to_branch() {
+    local branch_name="$1"
+
+    cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
+
+    # Ensure remote URL uses SSH
+    git remote set-url origin git@github.com:devnouiq/linode.git
+
+    echo "Current directory: $(pwd)"
+    git remote -v
+
+    # Create or switch to the tenant-specific branch using tenant_id
+    if git ls-remote --exit-code --heads origin "${branch_name}"; then
+        git checkout "${branch_name}"
+        git pull origin "${branch_name}" || { echo "Error pulling branch ${branch_name}"; exit 1; }
+    else
+        git checkout -b "${branch_name}"
+    fi
 }
 
 create_helm_release() {    
@@ -86,22 +109,21 @@ EOF
 }
 
 commit_files() {
-    local repository_branch="$1"
-    local tenant_id="$2"
-    local tenant_tier="$3"
-    cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
-
-    # Ensure remote URL uses SSH
-    git remote set-url origin git@github.com:devnouiq/linode.git
-
-    echo "Current directory: $(pwd)"
-    git remote -v
+    local tenant_id="$1"
+    local tenant_tier="$2"
+    local branch_name="${tenant_id}"
 
     git status
-    git pull || { echo "Error pulling repository"; exit 1; }
-    git add . || { echo "Error staging changes"; exit 1; }
-    git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || { echo "Error committing changes"; exit 1; }
-    git push origin "${repository_branch}" || { echo "Error pushing changes"; exit 1; }
+
+    # Stage and commit only if there are changes
+    if [[ -n "$(git status --porcelain)" ]]; then
+        git add . || { echo "Error staging changes"; exit 1; }
+        git commit -m "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || echo "No changes to commit."
+        git push -u origin "${branch_name}" || { echo "Error pushing changes"; exit 1; }
+        echo "Changes successfully pushed to branch ${branch_name}."
+    else
+        echo "No changes to commit for branch ${branch_name}."
+    fi
 }
 
 main "$@"
