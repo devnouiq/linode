@@ -1,4 +1,8 @@
   - dummy-configmap.yaml
+<<<<<<< Updated upstream
   - tenant-43d27d.yaml
+=======
+  - tenant-33f77f.yaml
+>>>>>>> Stashed changes
   - tenant-a132a4.yaml
   - tenant-aa4b7f.yaml
