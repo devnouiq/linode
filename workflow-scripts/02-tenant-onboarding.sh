@@ -33,9 +33,12 @@ create_helm_release() {
     local release_version="$3"
     local tier_template_file="$4"
 
-    # Define the new folder path for the tenant
-    local tenant_folder="${manifests_path}/${tenant_tier}/tenant-${tenant_id}"
-    local tenant_manifest_file="${tenant_folder}/tenant-${tenant_id}.yaml"
+    # Ensure tenant_id does NOT already have 'tenant-' prefix
+    local clean_tenant_id="${tenant_id#tenant-}"  # Removes 'tenant-' prefix if it exists
+
+    # Define correct tenant folder path
+    local tenant_folder="${manifests_path}/${tenant_tier}/tenant-${clean_tenant_id}"
+    local tenant_manifest_file="${tenant_folder}/tenant-${clean_tenant_id}.yaml"
     local kustomization_file="${tenant_folder}/kustomization.yaml"
 
     # Create the tenant-specific directory
@@ -45,20 +48,20 @@ create_helm_release() {
     cp "${tier_template_file}" "${tenant_manifest_file}"
 
     # Replace placeholders in the manifest file
-    sed -i "s|{TENANT_ID}|${tenant_id}|g" "${tenant_manifest_file}"
+    sed -i "s|{TENANT_ID}|${clean_tenant_id}|g" "${tenant_manifest_file}"
     sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${tenant_manifest_file}"
 
-    echo "Created Helm release for ${tenant_id} in ${tenant_folder}"
+    echo "Created Helm release for tenant ${clean_tenant_id} in ${tenant_folder}"
 
     # Generate a unique kustomization.yaml for this tenant
     cat > "${kustomization_file}" <<EOF
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - tenant-${tenant_id}.yaml
+  - tenant-${clean_tenant_id}.yaml
 EOF
 
-    echo "Created kustomization.yaml for ${tenant_id} in ${tenant_folder}"
+    echo "Created kustomization.yaml for tenant ${clean_tenant_id} in ${tenant_folder}"
 }
 
 get_tier_template_file() {
