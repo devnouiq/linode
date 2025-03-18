@@ -4,3 +4,5 @@ resources:
   - tenant-b6ad46.yaml
   - dummy-configmap.yaml
   - tenant-19bc5f.yaml
+
+  - tenant-6e4dcb.yaml
