@@ -117,9 +117,17 @@ commit_files() {
         git pull --autostash --rebase || {
             echo "Merge conflict detected. Attempting to resolve..."
 
+            # Ensure conflicts in kustomization.yaml are resolved
             if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
                 echo "Conflict detected in kustomization.yaml. Fixing..."
                 resolve_kustomization_conflict "${tenant_tier}"
+            fi
+
+            # Final validation before committing
+            if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
+                echo "ERROR: kustomization.yaml still contains conflict markers!"
+                echo "Manual intervention required."
+                exit 1
             fi
 
             git add .
@@ -129,9 +137,8 @@ commit_files() {
                 continue
             }
 
-            # Checkout main branch to prevent detached HEAD state
             git checkout "${repository_branch}"
-            git pull origin "${repository_branch}" --rebase  # Ensure branch is updated
+            git pull origin "${repository_branch}" --rebase
 
             git push origin "${repository_branch}" || {
                 echo "Error pushing resolved conflict on attempt ${attempt}."
@@ -145,6 +152,12 @@ commit_files() {
 
         # Apply stashed changes
         git stash pop || echo "No stashed changes to apply."
+
+        # **Final Check Before Committing**
+        if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
+            echo "ERROR: Merge conflict markers found in kustomization.yaml. Aborting commit!"
+            exit 1
+        fi
 
         # Stage and commit
         git add .
@@ -174,32 +187,16 @@ resolve_kustomization_conflict() {
 
     echo "Resolving merge conflict in ${kustomization_file}..."
 
-    # Backup the conflicted file
+    # Backup the conflicted file before processing
     cp "${kustomization_file}" "${kustomization_file}.bak"
 
-    # Create a temporary file for cleaned-up resources
-    temp_file=$(mktemp)
+    # Remove conflict markers and only keep valid tenant entries
+    awk '!/<<<<<<<|=======|>>>>>>>/ {print}' "${kustomization_file}.bak" | sort -u > "${kustomization_file}"
 
-    # Start fresh with correct YAML headers
-    {
-        echo "apiVersion: kustomize.config.k8s.io/v1beta1"
-        echo "kind: Kustomization"
-        echo "resources:"
-        echo "  - dummy-configmap.yaml"
-    } > "${temp_file}"
+    # Ensure the final kustomization.yaml has a trailing newline
+    echo "" >> "${kustomization_file}"
 
-    # Extract valid tenant entries, ignoring Git conflict markers
-    grep -E "^\s+- [a-z0-9-/]+.yaml" "${kustomization_file}.bak" | sort -u | while read -r line; do
-        echo "  $line" >> "${temp_file}"
-    done
-
-    # Ensure a new line at the end
-    echo "" >> "${temp_file}"
-
-    # Replace the original file with the cleaned-up version
-    mv "${temp_file}" "${kustomization_file}"
     rm "${kustomization_file}.bak"
-
     echo "Successfully resolved merge conflict in ${kustomization_file}."
 }
 
