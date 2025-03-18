@@ -14,12 +14,10 @@ main() {
     local repository_branch="$6"
 
     # get tier template file based on the tier for the tenant being provisioned 
-    # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tier-templates/premium_tenant_template.yaml)
     local tier_template_file
     tier_template_file=$(get_tier_template_file "$tenant_tier")
     
     # create the tenant helm release file based on the tier template file and tenant id
-    # (e.g. /mnt/vol/eks-saas-gitops/gitops/application-plane/production/tenants/premium/tenant-1.yaml)
     create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file"
     
     # configure git user and ssh key so we can push changes to the gitops repo
@@ -34,19 +32,27 @@ create_helm_release() {
     local tenant_tier="$2"
     local release_version="$3"
     local tier_template_file="$4"
-    
-    # tenant helm release file name based on tenant_tier and tenant_id e.g. (premium/tenant-1.yaml)
-    local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
 
-    # make a copy of the tier template file onto the tenant helm release file
+    local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
+    local kustomization_file="${manifests_path}/${tenant_tier}/kustomization.yaml"
+
+    # Copy template to create tenant manifest
     cp "${tier_template_file}" "${manifests_path}/${tenant_manifest_file}"
-    
-    # replace the tenant id and release version in the tenant helm release file
+
+    # Replace placeholders
     sed -i "s|{TENANT_ID}|${tenant_id}|g" "${manifests_path}/${tenant_manifest_file}"
     sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${manifests_path}/${tenant_manifest_file}"
-    
-    # update the kustomization file with the new tenant helm release file
-    printf "\n  - %s.yaml" "${tenant_id}" >> "${manifests_path}/${tenant_tier}/kustomization.yaml"    
+
+    # Ensure the kustomization file is updated safely
+    echo "Adding tenant ${tenant_id} to ${kustomization_file}"
+
+    # Avoid duplicate entries and concurrent modifications
+    (grep -v "${tenant_id}.yaml" "${kustomization_file}" || true) > "${kustomization_file}.tmp"
+    echo "  - ${tenant_id}.yaml" >> "${kustomization_file}.tmp"
+
+    # Sort and remove duplicates
+    sort -u "${kustomization_file}.tmp" > "${kustomization_file}"
+    rm "${kustomization_file}.tmp"
 }
 
 get_tier_template_file() {
@@ -86,75 +92,70 @@ commit_files() {
     local repository_branch="$1"
     local tenant_id="$2"
     local tenant_tier="$3"
-    cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
+    local max_retries=3
+    local attempt=1
 
-    # Ensure remote URL uses SSH
+    cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
     git remote set-url origin git@github.com:devnouiq/linode.git
 
     echo "Current directory: $(pwd)"
     git remote -v
 
-    git status
+    while [[ $attempt -le $max_retries ]]; do
+        echo "Attempt ${attempt}/${max_retries} to commit changes."
 
-    # Stash local changes to prevent merge conflicts
-    git stash push -m "Stashing before pull for tenant ${tenant_id}" || { echo "Error stashing changes"; exit 1; }
+        # Stash changes to prevent conflicts
+        git stash push -m "Stashing before pull for tenant ${tenant_id}" || echo "Nothing to stash."
 
-    # Pull latest changes with auto-stash
-    git pull --autostash --rebase || {
-        echo "Merge conflict detected. Attempting to resolve..."
-        git rebase --abort
-        git stash pop || { echo "Error applying stash"; exit 1; }
-        
-        # Attempt auto-resolving conflicts
-        git add .
-        git commit -am "Resolved merge conflict for ${tenant_id}" || { 
-            echo "Error committing merge, retrying..."
-            retry_commit "${repository_branch}" "${tenant_id}" "${tenant_tier}"
+        # Pull latest changes with rebase
+        git pull --autostash --rebase || {
+            echo "Merge conflict detected. Retrying..."
+            git rebase --abort
+            git stash pop || { echo "Error applying stash"; exit 1; }
+
+            # Ensure correct appending of kustomization.yaml
+            create_helm_release "${tenant_id}" "${tenant_tier}" "latest_version"
+
+            git add .
+            git commit -am "Resolved merge conflict for ${tenant_id}" || {
+                echo "Error committing merge on attempt ${attempt}."
+                attempt=$((attempt + 1))
+                continue
+            }
+
+            git push origin "${repository_branch}" || {
+                echo "Error pushing resolved conflict on attempt ${attempt}."
+                attempt=$((attempt + 1))
+                continue
+            }
+
+            echo "Successfully committed and pushed on retry attempt ${attempt}."
             return
         }
 
-        git push origin "${repository_branch}" || { echo "Error pushing resolved conflict"; exit 1; }
-        return
-    }
+        # Apply stashed changes
+        git stash pop || echo "No stashed changes to apply."
 
-    # Reapply stashed changes if any
-    git stash pop || echo "No stashed changes to apply."
+        # Stage and commit
+        git add .
+        git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || {
+            echo "Error committing changes."
+            attempt=$((attempt + 1))
+            continue
+        }
 
-    # Stage and commit changes
-    git add . || { echo "Error staging changes"; exit 1; }
-    git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || { echo "Error committing changes"; exit 1; }
-    
-    # Push changes to the remote repository
-    git push origin "${repository_branch}" || { echo "Error pushing changes"; exit 1; }
+        # Push changes
+        git push origin "${repository_branch}" && {
+            echo "Successfully pushed changes on attempt ${attempt}."
+            return
+        }
+
+        echo "Push failed, retrying..."
+        attempt=$((attempt + 1))
+    done
+
+    echo "Failed to commit changes after ${max_retries} attempts. Manual intervention required."
+    exit 1
 }
-
-retry_commit() {
-    local repository_branch="$1"
-    local tenant_id="$2"
-    local tenant_tier="$3"
-
-    echo "Retrying commit due to merge conflicts..."
-    
-    # Pull latest changes again to ensure no conflicts remain
-    git pull --rebase || { 
-        echo "Second merge conflict detected. Manual intervention required."
-        exit 1
-    }
-
-    git add .
-    git commit -am "Retry: Resolving merge conflict for ${tenant_id}" || { 
-        echo "Final attempt to commit failed."
-        exit 1
-    }
-
-    git push origin "${repository_branch}" || { 
-        echo "Final attempt to push failed."
-        exit 1
-    }
-
-    echo "Commit and push successful after retry!"
-}
-
-
 
 main "$@"
