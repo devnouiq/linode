@@ -46,12 +46,19 @@ create_helm_release() {
 
     echo "Created Helm release for tenant ${tenant_id} in ${manifests_path}/${tenant_tier}"
 
-    # Ensure tenant is added to kustomization.yaml safely (always on a new line)
+    # Ensure proper formatting and order in kustomization.yaml
     if ! grep -q "  - ${tenant_id}.yaml" "${kustomization_file}"; then
         cp "${kustomization_file}" "${kustomization_file}.bak"
-        echo "" >> "${kustomization_file}.bak"  # Ensure a new line before adding
-        echo "  - ${tenant_id}.yaml" >> "${kustomization_file}.bak"
-        sort -u "${kustomization_file}.bak" > "${kustomization_file}"  # Sort & deduplicate
+
+        # Insert new tenant while preserving order and formatting
+        {
+            head -n 3 "${kustomization_file}.bak"  # Retain headers
+            echo "  - ${tenant_id}.yaml"  # Add new entry on a new line
+            tail -n +4 "${kustomization_file}.bak"  # Keep existing entries
+        } > "${kustomization_file}"
+
+        # Sort and clean up
+        awk '!seen[$0]++' "${kustomization_file}" > "${kustomization_file}.tmp" && mv "${kustomization_file}.tmp" "${kustomization_file}"
         rm "${kustomization_file}.bak"
     fi
 }
@@ -169,18 +176,27 @@ resolve_kustomization_conflict() {
     # Backup the conflicted file
     cp "${kustomization_file}" "${kustomization_file}.bak"
 
-    # Start fresh
-    echo "apiVersion: kustomize.config.k8s.io/v1beta1" > "${kustomization_file}"
-    echo "kind: Kustomization" >> "${kustomization_file}"
-    echo "resources:" >> "${kustomization_file}"
-    echo "  - dummy-configmap.yaml" >> "${kustomization_file}"
+    # Create a temporary file for cleaned-up resources
+    temp_file=$(mktemp)
 
-    # Extract valid tenant entries while ignoring Git conflict markers
-    grep -E "^\s+- [a-z0-9-/]+.yaml" "${kustomization_file}.bak" | sort -u | while read -r line; do
-        echo "  $line" >> "${kustomization_file}"
-    done
+    # Start fresh with correct YAML headers
+    {
+        echo "apiVersion: kustomize.config.k8s.io/v1beta1"
+        echo "kind: Kustomization"
+        echo "resources:"
+        echo "  - dummy-configmap.yaml"
+    } > "${temp_file}"
 
+    # Extract valid tenant entries, ensuring each is on a new line
+    grep -E "^\s+- [a-z0-9-]+.yaml" "${kustomization_file}.bak" | sort -u >> "${temp_file}"
+
+    # Ensure a new line at the end of the file
+    echo "" >> "${temp_file}"
+
+    # Replace the original file with cleaned-up version
+    mv "${temp_file}" "${kustomization_file}"
     rm "${kustomization_file}.bak"
+
     echo "Successfully resolved merge conflict in ${kustomization_file}."
 }
 
