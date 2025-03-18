@@ -33,11 +33,11 @@ create_helm_release() {
     local release_version="$3"
     local tier_template_file="$4"
 
-    # Tenant helm release file name
+    # Tenant Helm release file name
     local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
     local kustomization_file="${manifests_path}/${tenant_tier}/kustomization.yaml"
 
-    # Create tenant helm release file from template
+    # Create tenant Helm release file from template
     cp "${tier_template_file}" "${manifests_path}/${tenant_manifest_file}"
 
     # Replace placeholders
@@ -46,19 +46,17 @@ create_helm_release() {
 
     echo "Created Helm release for tenant ${tenant_id} in ${manifests_path}/${tenant_tier}"
 
-    # Ensure proper formatting and order in kustomization.yaml
+    # Ensure new tenants are always added properly
     if ! grep -q "  - ${tenant_id}.yaml" "${kustomization_file}"; then
         cp "${kustomization_file}" "${kustomization_file}.bak"
 
-        # Insert new tenant while preserving order and formatting
-        {
-            head -n 3 "${kustomization_file}.bak"  # Retain headers
-            echo "  - ${tenant_id}.yaml"  # Add new entry on a new line
-            tail -n +4 "${kustomization_file}.bak"  # Keep existing entries
-        } > "${kustomization_file}"
+        # Ensure a blank line before adding a new entry
+        echo "" >> "${kustomization_file}.bak"
+        echo "  - ${tenant_id}.yaml" >> "${kustomization_file}.bak"
 
-        # Sort and clean up
-        awk '!seen[$0]++' "${kustomization_file}" > "${kustomization_file}.tmp" && mv "${kustomization_file}.tmp" "${kustomization_file}"
+        # Sort and remove duplicates while keeping formatting
+        awk '!seen[$0]++' "${kustomization_file}.bak" > "${kustomization_file}"
+
         rm "${kustomization_file}.bak"
     fi
 }
@@ -125,12 +123,15 @@ commit_files() {
             fi
 
             git add .
-
             git commit -am "Auto-resolved merge conflict in ${tenant_tier}/kustomization.yaml" || {
                 echo "Error committing merge on attempt ${attempt}."
                 attempt=$((attempt + 1))
                 continue
             }
+
+            # Checkout main branch to prevent detached HEAD state
+            git checkout "${repository_branch}"
+            git pull origin "${repository_branch}" --rebase  # Ensure branch is updated
 
             git push origin "${repository_branch}" || {
                 echo "Error pushing resolved conflict on attempt ${attempt}."
@@ -187,13 +188,15 @@ resolve_kustomization_conflict() {
         echo "  - dummy-configmap.yaml"
     } > "${temp_file}"
 
-    # Extract valid tenant entries, ensuring each is on a new line
-    grep -E "^\s+- [a-z0-9-]+.yaml" "${kustomization_file}.bak" | sort -u >> "${temp_file}"
+    # Extract valid tenant entries, ignoring Git conflict markers
+    grep -E "^\s+- [a-z0-9-/]+.yaml" "${kustomization_file}.bak" | sort -u | while read -r line; do
+        echo "  $line" >> "${temp_file}"
+    done
 
-    # Ensure a new line at the end of the file
+    # Ensure a new line at the end
     echo "" >> "${temp_file}"
 
-    # Replace the original file with cleaned-up version
+    # Replace the original file with the cleaned-up version
     mv "${temp_file}" "${kustomization_file}"
     rm "${kustomization_file}.bak"
 
