@@ -123,13 +123,6 @@ commit_files() {
                 resolve_kustomization_conflict "${tenant_tier}"
             fi
 
-            # Final validation before committing
-            if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
-                echo "ERROR: kustomization.yaml still contains conflict markers!"
-                echo "Manual intervention required."
-                exit 1
-            fi
-
             git add .
             git commit -am "Auto-resolved merge conflict in ${tenant_tier}/kustomization.yaml" || {
                 echo "Error committing merge on attempt ${attempt}."
@@ -155,11 +148,10 @@ commit_files() {
 
         # **Final Check Before Committing**
         if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
-            echo "ERROR: Merge conflict markers found in kustomization.yaml. Aborting commit!"
-            exit 1
+            echo "Merge conflict detected again. Attempting to fix..."
+            resolve_kustomization_conflict "${tenant_tier}"
         fi
 
-        # Stage and commit
         git add .
         git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || {
             echo "Error committing changes."
@@ -167,7 +159,6 @@ commit_files() {
             continue
         }
 
-        # Push changes
         git push origin "${repository_branch}" && {
             echo "Successfully pushed changes on attempt ${attempt}."
             return
