@@ -16,14 +16,14 @@ main() {
     # Get the appropriate tier template
     local tier_template_file
     tier_template_file=$(get_tier_template_file "$tenant_tier")
-    
-    # Create the tenant Helm release with its own kustomization.yaml
+
+    # Create the tenant Helm release file
     create_helm_release "$tenant_id" "$tenant_tier" "$release_version" "$tier_template_file"
-    
+
     # Configure Git user
     configure_git "${git_user_email}" "${git_user_name}"
 
-    # Push changes to Git
+    # Commit changes to Git
     commit_files "${repository_branch}" "${tenant_id}" "${tenant_tier}"
 }
 
@@ -33,35 +33,27 @@ create_helm_release() {
     local release_version="$3"
     local tier_template_file="$4"
 
-    # Ensure tenant_id does NOT already have 'tenant-' prefix
-    local clean_tenant_id="${tenant_id#tenant-}"  # Removes 'tenant-' prefix if it exists
+    # Tenant helm release file name
+    local tenant_manifest_file="${tenant_tier}/${tenant_id}.yaml"
+    local kustomization_file="${manifests_path}/${tenant_tier}/kustomization.yaml"
 
-    # Define correct tenant folder path
-    local tenant_folder="${manifests_path}/${tenant_tier}/tenant-${clean_tenant_id}"
-    local tenant_manifest_file="${tenant_folder}/tenant-${clean_tenant_id}.yaml"
-    local kustomization_file="${tenant_folder}/kustomization.yaml"
+    # Create tenant helm release file from template
+    cp "${tier_template_file}" "${manifests_path}/${tenant_manifest_file}"
 
-    # Create the tenant-specific directory
-    mkdir -p "${tenant_folder}"
+    # Replace placeholders
+    sed -i "s|{TENANT_ID}|${tenant_id}|g" "${manifests_path}/${tenant_manifest_file}"
+    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${manifests_path}/${tenant_manifest_file}"
 
-    # Copy the tier template to create the tenant manifest
-    cp "${tier_template_file}" "${tenant_manifest_file}"
+    echo "Created Helm release for tenant ${tenant_id} in ${manifests_path}/${tenant_tier}"
 
-    # Replace placeholders in the manifest file
-    sed -i "s|{TENANT_ID}|${clean_tenant_id}|g" "${tenant_manifest_file}"
-    sed -i "s|{RELEASE_VERSION}|${release_version}|g" "${tenant_manifest_file}"
-
-    echo "Created Helm release for tenant ${clean_tenant_id} in ${tenant_folder}"
-
-    # Generate a unique kustomization.yaml for this tenant
-    cat > "${kustomization_file}" <<EOF
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - tenant-${clean_tenant_id}.yaml
-EOF
-
-    echo "Created kustomization.yaml for tenant ${clean_tenant_id} in ${tenant_folder}"
+    # Ensure tenant is added to kustomization.yaml safely (always on a new line)
+    if ! grep -q "  - ${tenant_id}.yaml" "${kustomization_file}"; then
+        cp "${kustomization_file}" "${kustomization_file}.bak"
+        echo "" >> "${kustomization_file}.bak"  # Ensure a new line before adding
+        echo "  - ${tenant_id}.yaml" >> "${kustomization_file}.bak"
+        sort -u "${kustomization_file}.bak" > "${kustomization_file}"  # Sort & deduplicate
+        rm "${kustomization_file}.bak"
+    fi
 }
 
 get_tier_template_file() {
@@ -101,7 +93,7 @@ commit_files() {
     local repository_branch="$1"
     local tenant_id="$2"
     local tenant_tier="$3"
-    local max_retries=3
+    local max_retries=5
     local attempt=1
 
     cd ${repo_root_path} || { echo "Error: Failed to change directory to ${repo_root_path}"; exit 1; }
@@ -113,18 +105,21 @@ commit_files() {
     while [[ $attempt -le $max_retries ]]; do
         echo "Attempt ${attempt}/${max_retries} to commit changes."
 
-        # Pull latest changes with rebase
+        # Stash any local changes before pulling
+        git stash push -m "Stashing before pull for tenant ${tenant_id}" || echo "Nothing to stash."
+
+        # Pull latest changes and handle conflicts
         git pull --autostash --rebase || {
-            echo "Merge conflict detected. Retrying..."
-            git rebase --abort
-            git stash pop || { echo "Error applying stash"; exit 1; }
+            echo "Merge conflict detected. Attempting to resolve..."
 
-            # Ensure tenant folder is correctly added
-            create_helm_release "${tenant_id}" "${tenant_tier}" "latest_version"
+            if grep -q "<<<<<<<" "${manifests_path}/${tenant_tier}/kustomization.yaml"; then
+                echo "Conflict detected in kustomization.yaml. Fixing..."
+                resolve_kustomization_conflict "${tenant_tier}"
+            fi
 
-            # Stage, commit, and push changes
             git add .
-            git commit -am "Resolved merge conflict for ${tenant_id}" || {
+
+            git commit -am "Auto-resolved merge conflict in ${tenant_tier}/kustomization.yaml" || {
                 echo "Error committing merge on attempt ${attempt}."
                 attempt=$((attempt + 1))
                 continue
@@ -136,9 +131,12 @@ commit_files() {
                 continue
             }
 
-            echo "Successfully committed and pushed on retry attempt ${attempt}."
+            echo "Successfully committed and pushed after resolving merge conflict."
             return
         }
+
+        # Apply stashed changes
+        git stash pop || echo "No stashed changes to apply."
 
         # Stage and commit
         git add .
@@ -160,6 +158,30 @@ commit_files() {
 
     echo "Failed to commit changes after ${max_retries} attempts. Manual intervention required."
     exit 1
+}
+
+resolve_kustomization_conflict() {
+    local tenant_tier="$1"
+    local kustomization_file="${manifests_path}/${tenant_tier}/kustomization.yaml"
+
+    echo "Resolving merge conflict in ${kustomization_file}..."
+
+    # Backup the conflicted file
+    cp "${kustomization_file}" "${kustomization_file}.bak"
+
+    # Start fresh
+    echo "apiVersion: kustomize.config.k8s.io/v1beta1" > "${kustomization_file}"
+    echo "kind: Kustomization" >> "${kustomization_file}"
+    echo "resources:" >> "${kustomization_file}"
+    echo "  - dummy-configmap.yaml" >> "${kustomization_file}"
+
+    # Extract valid tenant entries while ignoring Git conflict markers
+    grep -E "^\s+- [a-z0-9-/]+.yaml" "${kustomization_file}.bak" | sort -u | while read -r line; do
+        echo "  $line" >> "${kustomization_file}"
+    done
+
+    rm "${kustomization_file}.bak"
+    echo "Successfully resolved merge conflict in ${kustomization_file}."
 }
 
 main "$@"
