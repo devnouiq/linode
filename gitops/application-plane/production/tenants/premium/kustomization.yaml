@@ -1,5 +1,9 @@
   - dummy-configmap.yaml
+<<<<<<< Updated upstream
   - tenant-19bc5f.yaml
+=======
+  - tenant-e9bcde.yaml
+>>>>>>> Stashed changes
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
