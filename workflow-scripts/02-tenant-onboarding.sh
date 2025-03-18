@@ -95,10 +95,66 @@ commit_files() {
     git remote -v
 
     git status
-    git pull || { echo "Error pulling repository"; exit 1; }
+
+    # Stash local changes to prevent merge conflicts
+    git stash push -m "Stashing before pull for tenant ${tenant_id}" || { echo "Error stashing changes"; exit 1; }
+
+    # Pull latest changes with auto-stash
+    git pull --autostash --rebase || {
+        echo "Merge conflict detected. Attempting to resolve..."
+        git rebase --abort
+        git stash pop || { echo "Error applying stash"; exit 1; }
+        
+        # Attempt auto-resolving conflicts
+        git add .
+        git commit -am "Resolved merge conflict for ${tenant_id}" || { 
+            echo "Error committing merge, retrying..."
+            retry_commit "${repository_branch}" "${tenant_id}" "${tenant_tier}"
+            return
+        }
+
+        git push origin "${repository_branch}" || { echo "Error pushing resolved conflict"; exit 1; }
+        return
+    }
+
+    # Reapply stashed changes if any
+    git stash pop || echo "No stashed changes to apply."
+
+    # Stage and commit changes
     git add . || { echo "Error staging changes"; exit 1; }
     git commit -am "Adding new tenant ${tenant_id} in tier ${tenant_tier}" || { echo "Error committing changes"; exit 1; }
+    
+    # Push changes to the remote repository
     git push origin "${repository_branch}" || { echo "Error pushing changes"; exit 1; }
 }
+
+retry_commit() {
+    local repository_branch="$1"
+    local tenant_id="$2"
+    local tenant_tier="$3"
+
+    echo "Retrying commit due to merge conflicts..."
+    
+    # Pull latest changes again to ensure no conflicts remain
+    git pull --rebase || { 
+        echo "Second merge conflict detected. Manual intervention required."
+        exit 1
+    }
+
+    git add .
+    git commit -am "Retry: Resolving merge conflict for ${tenant_id}" || { 
+        echo "Final attempt to commit failed."
+        exit 1
+    }
+
+    git push origin "${repository_branch}" || { 
+        echo "Final attempt to push failed."
+        exit 1
+    }
+
+    echo "Commit and push successful after retry!"
+}
+
+
 
 main "$@"
