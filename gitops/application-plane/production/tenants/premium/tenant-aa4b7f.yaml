@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-aa4b7f
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: tenant-aa4b7f-premium
+  namespace: flux-system
+spec:
+  releaseName: tenant-aa4b7f-premium
+  targetNamespace: tenant-aa4b7f
+  storageNamespace: tenant-aa4b7f
+  interval: 1m0s
+  chart:
+    spec:
+      chart: ./helm-charts/helm-tenant-chart
+      version: "1.9.x"
+      sourceRef:
+        kind: GitRepository
+        name: helm-tenant-chart
+  values:
+    tenantId: tenant-aa4b7f
+    host: {DOMAIN_NAME}
+    apps: {}
+    
